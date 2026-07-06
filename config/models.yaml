@@ -1,0 +1,6 @@
+routes:
+  cheap_chat:
+    model: "oc/deepseek-v4-flash-free"
+    base_url: "http://localhost:20128/v1"
+    api_key: "sk-d7282cf482a8748a-g8b12r-83b96baa"
+fallback_response: "Friday couldn't reach a model right now."

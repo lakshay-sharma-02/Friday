@@ -1,0 +1,78 @@
+============================================================
+Phase 5 Memory System - Complete Test Suite
+============================================================
+
+=== TEST 1: Run two different tasks ===
+Total runs: 2
+Stats: {'total_runs': 2, 'runs_by_tier': {'HOT': 2}, 'total_notes': 0, 'notes_by_tier': {}, 'notes_by_source': {}}
+✓ Test 1 passed: 2 runs stored
+
+=== TEST 2: Semantic similarity search ===
+
+Search query: 'git status'
+Results (2 found):
+
+1. Score: 0.4627
+   Text: check git status
+   Source: runs
+
+2. Score: 0.2525
+   Text: show me the git repository status
+   Source: runs
+
+✓ Test 2 passed: Semantic search found related tasks
+
+=== TEST 3: Crash durability (WAL mode) ===
+
+Before 'crash': 3 runs
+After 'crash': 3 runs
+✓ Test 3 passed: All runs survived simulated crash (WAL mode working)
+
+=== TEST 4: Tier aging to COLD ===
+
+Tier before retier: HOT
+Retier results: {'HOT': 0, 'WARM': 0, 'COLD': 1}
+Tier after retier: COLD
+✓ Test 4 passed: Old run correctly moved to COLD tier
+
+=== TEST 5: Explicit teaching with teach: command ===
+
+Notes before: 0
+Notes after: 1
+Notes by source: {'taught': 1}
+✓ Test 5 passed: Taught note stored with source='taught'
+
+=== TEST 6: Taught note retrieval in search ===
+
+Search query: 'committing code tests'
+Results (1 found):
+
+1. Score: 0.6325
+   Text: always run tests before committing
+   Source: notes
+   Note source: taught
+
+✓ Test 6 passed: Taught note surfaced in relevant search
+
+=== TEST 7: Lesson extraction from planner ===
+
+Lesson text: Shell commands in this workspace need an explicit cwd argument, relative paths fail from the daemon's working directory.
+Notes before: 1
+Notes after: 2
+Notes by source: {'lesson': 1, 'taught': 1}
+✓ Test 7 passed: Lesson note stored with source='lesson'
+
+=== TEST 8: No spurious lesson for trivial task ===
+
+Simulating planner output for trivial task 'check git status':
+Planner raw output:
+[
+  {"tool": "git_status", "args": {}, "description": "Check repository status"}
+]
+
+Contains LESSON line: False
+✓ Test 8 passed: No lesson emitted for trivial task
+
+============================================================
+ALL 8 TESTS PASSED ✓
+============================================================

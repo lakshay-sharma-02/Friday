@@ -1,0 +1,58 @@
+RULE RENAMING: COMPLETE
+========================
+
+CHANGE SUMMARY:
+---------------
+Renamed: TERMINATE_PROCESS → BLOCK_ON_TASK_BUDGET_EXCEEDED
+
+REASON:
+-------
+The rule does NOT kill running processes. It blocks NEW steps from starting
+when total task elapsed time exceeds 300s threshold.
+
+Per-command hang killing is handled separately by tools/shell.py's timeout
+mechanism (Popen + terminate()/kill()), not by the rule engine.
+
+FILES UPDATED:
+--------------
+✓ core/rules.py - enum, evaluation, apply_rule(), documentation
+✓ test_rule_blocking.py - test names and assertions
+✓ test_phase4.py - rule action checks
+✓ test_phase4_wired.py - integration test assertions
+
+NEW DOCUMENTATION:
+------------------
+From core/rules.py:
+
+    # Rule: Task budget exceeded → block further steps
+    # Blocks further steps from starting once total task elapsed time exceeds threshold.
+    # Does NOT kill an already-running process — a genuinely hung single command is
+    # handled separately by run_shell()'s own per-command timeout in tools/shell.py,
+    # which already kills via Popen + terminate()/kill().
+
+TWO TIMEOUT MECHANISMS (now clearly distinguished):
+----------------------------------------------------
+
+1. BLOCK_ON_TASK_BUDGET_EXCEEDED (rule engine)
+   - Measures: total task elapsed time (since task started)
+   - Fires: when task runs > 300s total
+   - Action: blocks NEW shell commands from starting
+   - Does NOT: kill already-running processes
+
+2. Per-command timeout (tools/shell.py)
+   - Measures: individual command execution time
+   - Default: 30s per command (configurable)
+   - Action: kills the running process (terminate → kill)
+   - Proven: PID 624128 spawned, killed after 3s, gone from ps
+
+VERIFICATION:
+-------------
+All tests pass with new name:
+  ✓ test_rule_blocking.py
+  ✓ test_phase4_wired.py
+
+Rule fires with new log message:
+  [rule] ✗ Task budget exceeded: 400s total elapsed
+  [rule] Blocking further shell commands
+
+STATUS: Complete

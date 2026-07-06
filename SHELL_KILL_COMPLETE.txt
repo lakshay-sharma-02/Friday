@@ -1,0 +1,72 @@
+SHELL TOOL: PROCESS KILLING - COMPLETE
+=======================================
+
+RAW TEST OUTPUT (ps before/after):
+-----------------------------------
+
+=== DIRECT SHELL KILL TEST ===
+
+[1] ps aux BEFORE starting sleep:
+(no sleep processes running)
+
+[2] Starting 'sleep 30' with timeout=3...
+   Completed in 3.00s
+
+[3] Returned dict:
+   output: Command timed out after 3s. Output before timeout:
+   exit_code: None
+   success: False
+   killed: True
+   reason: timeout exceeded
+   pid: 624128
+
+[4] ps aux AFTER timeout (PID should be gone):
+   (no process found - killed successfully)
+
+=== VERIFICATION ===
+✓ Timeout fired at ~3s: 3.00s
+✓ killed=True: True
+✓ reason='timeout exceeded': timeout exceeded
+✓ PID tracked: 624128
+✓ Process gone from ps
+
+WHAT WAS FIXED:
+---------------
+
+1. ✓ Changed subprocess.run() → subprocess.Popen()
+   - Retains live process handle with PID
+   - Process tracked in global _running_processes registry
+
+2. ✓ Waits with timeout using communicate(timeout=...)
+   - Can be interrupted and killed
+   - Not a blocking subprocess.run() call
+
+3. ✓ On timeout: terminate() → wait 2s → kill() if needed
+   - Returns {"killed": True, "reason": "timeout exceeded", "pid": ...}
+   - Process actually dies (verified by ps)
+
+4. ✓ Added kill_process(pid) function
+   - Can be called externally to kill any tracked process
+   - Returns True if killed, False if not found
+
+5. ✓ PID tracked in execution log
+   - pipeline.py now stores result.get("pid") in log entries
+   - Can be looked up later for killing
+
+REMAINING WORK:
+---------------
+
+Wire kill_process() into rule engine so rules can kill RUNNING processes:
+
+Current: TERMINATE_PROCESS blocks FUTURE steps when task > 300s
+Needed: TERMINATE_PROCESS kills CURRENTLY RUNNING shell if it exceeds timeout
+
+Implementation:
+- When rule fires, check execution_log for running shell with PID
+- Call kill_process(pid) on that actual live process
+- Then rename to reflect reality (keeps TERMINATE_PROCESS name once it actually terminates)
+
+STATUS:
+-------
+Shell tool CAN kill processes (verified with ps output).
+Rule engine wiring is next step to make rules kill live processes.

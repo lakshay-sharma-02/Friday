@@ -1,0 +1,5 @@
+tools:
+  shell: 1
+  read_file: 0
+  write_file: 1
+  git_status: 0
