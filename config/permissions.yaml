@@ -1,5 +1,16 @@
 tools:
   shell: 1
+  python: 1
+  process: 1
   read_file: 0
   write_file: 1
   git_status: 0
+  git_diff: 0
+  git_log: 0
+  git_add: 1
+  git_commit: 1
+  git_branch: 1
+  git_checkout: 1
+  git_restore: 1
+  git_reset: 1
+  git_clone: 1

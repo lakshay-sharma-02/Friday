@@ -1,146 +1,90 @@
-"""Shell command execution with killable processes."""
+"""Shell command execution tool.
 
-import subprocess
-import time
-import asyncio
-import signal
+Executes an arbitrary OS command without shell=True. Arguments are passed as
+argv, so there is no shell interpretation of metacharacters. `run_shell` blocks
+until the command finishes; `start_shell` launches it in the background so it
+can be inspected/terminated via the `process` tool. Legacy `kill_process` /
+`get_running_processes` helpers are retained for the pipeline watchdog.
+"""
+
+import os
+import shlex
+from tools.process_manager import (
+    _run_process,
+    spawn_process as _spawn_process,
+    list_processes as _list_processes,
+    terminate_process as _terminate_process,
+)
 
 
-# Global registry of running processes
-_running_processes = {}
+def _to_argv(command):
+    return shlex.split(command) if isinstance(command, str) else list(command)
 
 
-def run_shell(command: str, timeout: int = 30) -> dict:
-    """Execute a shell command and return results.
+def run_shell(command, *, cwd=None, timeout=30, env=None,
+              cancel_event=None, graceful_timeout=5.0) -> dict:
+    """Execute an OS command and return a structured result (blocks).
 
     Args:
-        command: Shell command to execute
-        timeout: Maximum execution time in seconds
-
-    Returns:
-        Dict with output, exit_code, success, and optionally killed/reason fields
+        command: command string (shlex-split) or list of argv
+        cwd: working directory
+        timeout: max seconds before graceful kill
+        env: extra/override environment variables (merged over os.environ)
+        cancel_event: threading.Event that aborts early when set
     """
-    try:
-        # Use Popen to get a live process handle
-        process = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-        # Store process handle in global registry
-        pid = process.pid
-        _running_processes[pid] = {
-            "process": process,
-            "command": command,
-            "started_at": time.time(),
-        }
-
-        try:
-            # Wait for completion with timeout
-            stdout, stderr = process.communicate(timeout=timeout)
-
-            # Remove from registry
-            _running_processes.pop(pid, None)
-
-            output = stdout
-            if stderr:
-                output += "\n" + stderr
-
-            return {
-                "output": output.strip(),
-                "exit_code": process.returncode,
-                "success": process.returncode == 0,
-                "pid": pid,
-            }
-
-        except subprocess.TimeoutExpired:
-            # Try graceful termination first
-            process.terminate()
-            try:
-                process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                # Force kill if terminate didn't work
-                process.kill()
-                process.wait()
-
-            # Remove from registry
-            _running_processes.pop(pid, None)
-
-            # Collect any output that was produced before timeout
-            try:
-                stdout, stderr = process.communicate(timeout=0.1)
-                output = stdout
-                if stderr:
-                    output += "\n" + stderr
-            except:
-                output = ""
-
-            return {
-                "output": f"Command timed out after {timeout}s. Output before timeout:\n{output}".strip(),
-                "exit_code": None,
-                "success": False,
-                "killed": True,
-                "reason": "timeout exceeded",
-                "pid": pid,
-            }
-
-    except Exception as e:
+    argv = _to_argv(command)
+    if not argv:
         return {
-            "output": f"Error executing command: {str(e)}",
-            "exit_code": 1,
+            "command": "",
+            "argv": [],
+            "exit_code": None,
+            "stdout": "",
+            "stderr": "",
             "success": False,
+            "duration": 0.0,
+            "pid": None,
+            "killed": False,
+            "reason": "empty command",
         }
+    merged = {**os.environ, **env} if env else None
+    return _run_process(argv, cwd=cwd, env=merged, timeout=timeout,
+                         cancel_event=cancel_event, graceful_timeout=graceful_timeout)
 
 
-def kill_process(pid: int) -> bool:
-    """Kill a running process by PID.
+def start_shell(command, *, cwd=None, env=None, graceful_timeout=5.0) -> dict:
+    """Launch an OS command in the background; returns immediately with pid.
 
-    Args:
-        pid: Process ID to kill
-
-    Returns:
-        True if process was killed, False if not found or already dead
+    The process is tracked until it exits and can be inspected or terminated
+    via the `process` tool. Never blocks.
     """
-    proc_info = _running_processes.get(pid)
-    if not proc_info:
-        return False
+    argv = _to_argv(command)
+    if not argv:
+        return {"command": "", "argv": [], "pid": None, "success": False,
+                "reason": "empty command"}
+    merged = {**os.environ, **env} if env else None
+    return _spawn_process(argv, cwd=cwd, env=merged, graceful_timeout=graceful_timeout)
 
-    process = proc_info["process"]
 
-    try:
-        # Try graceful termination
-        process.terminate()
-        try:
-            process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            # Force kill
-            process.kill()
-            process.wait()
+# --- Legacy API retained for core/pipeline.py watchdog compatibility ---
 
-        # Remove from registry
-        _running_processes.pop(pid, None)
-        return True
+_running_processes = {}  # pid -> {"process", "command", "started_at"} (best-effort shim)
 
-    except:
-        return False
+
+def kill_process(pid) -> bool:
+    """Backwards-compatible kill. Delegates to the process manager."""
+    res = _terminate_process(pid)
+    _running_processes.pop(pid, None)
+    return res.get("found", False)
 
 
 def get_running_processes() -> dict:
-    """Get all currently running shell processes.
-
-    Returns:
-        Dict mapping PID to process info
-    """
-    # Clean up any processes that have finished
-    finished = []
-    for pid, info in _running_processes.items():
-        if info["process"].poll() is not None:
-            finished.append(pid)
-
-    for pid in finished:
-        _running_processes.pop(pid, None)
-
-    return dict(_running_processes)
+    """Backwards-compatible listing. Returns pid -> info dict."""
+    out = {}
+    for entry in _list_processes():
+        out[entry["pid"]] = {
+            "process": None,
+            "command": entry["command"],
+            "started_at": entry["started_at"],
+        }
+        _running_processes.setdefault(entry["pid"], out[entry["pid"]])
+    return out
