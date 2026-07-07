@@ -1,41 +1,39 @@
 """Git tools for Friday.
 
-Thin wrappers over the `git` executable. All handlers return a structured dict
-with at least `success` and `output` (the executor/pipeline read those). No
-handler prints. Destructive operations require an explicit `confirm=True`.
+Thin, validated wrappers around the `git` executable. Every git invocation goes
+through the shared execution layer (`run_shell` -> `process_manager`), so timeout,
+cancellation, and error handling stay centralized and consistent with the other
+execution tools. No handler prints. Destructive operations require an explicit
+`confirm=True`.
 """
 
-import subprocess
+from tools.shell import run_shell
 
 GIT_TIMEOUT = 30
 
 
 def _git(args, cwd=None, timeout=GIT_TIMEOUT) -> dict:
-    """Run a git command, returning a structured result. Never raises."""
-    try:
-        result = subprocess.run(
-            ["git", *args],
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except FileNotFoundError:
+    """Run a git command via the shared execution layer. Never raises."""
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+    exit_code = result.get("exit_code")
+    stderr = result.get("stderr", "") or ""
+    output = (result.get("stdout", "") or "").strip()
+    if stderr:
+        output = (output + "\n" + stderr.strip()).strip() or output
+
+    if "spawn failed" in (result.get("reason") or ""):
         return {"success": False, "exit_code": None,
                 "output": "", "reason": "git executable not found"}
-    except subprocess.TimeoutExpired:
-        return {"success": False, "exit_code": 124,
-                "output": "", "reason": "git command timed out"}
 
-    stderr = result.stderr.strip()
-    if result.returncode == 128 and "not a git repository" in stderr.lower():
+    if exit_code == 128 and "not a git repository" in output.lower():
         return {"success": False, "exit_code": 128,
                 "output": "", "reason": "not a git repository", "is_repo": False}
+
     return {
-        "success": result.returncode == 0,
-        "exit_code": result.returncode,
-        "output": (result.stdout.strip() + ("\n" + stderr if stderr else "")).strip(),
-        "reason": None if result.returncode == 0 else (stderr or "git failed"),
+        "success": result.get("success", False),
+        "exit_code": exit_code,
+        "output": output,
+        "reason": None if result.get("success") else (stderr or result.get("reason") or "git failed"),
         "is_repo": True,
     }
 
