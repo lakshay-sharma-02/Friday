@@ -1,6 +1,7 @@
 """Capability Router - metadata-driven routing to authoritative sources.
 
 Phase 10: Routes queries to capabilities based on semantic matching and metadata reasoning.
+Phase 10.5: Also classifies operation (WHAT user wants to do).
 No hardcoded patterns - the router reasons over capability metadata.
 """
 
@@ -12,12 +13,15 @@ from core.capability_registry import (
     CapabilityCategory,
     LatencyCategory
 )
+from core.operations import Operation
+from core.operation_classifier import OperationClassifier
 
 
 @dataclass
 class CapabilityRoutingDecision:
     """Result of capability routing."""
     capability: CapabilityMetadata
+    operation: Operation  # Phase 10.5: What user wants to do
     confidence: float
     reasoning: str  # Why this capability was chosen
 
@@ -30,23 +34,32 @@ class CapabilityRouter:
 
     def __init__(self):
         self.registry = get_capability_registry()
+        self.operation_classifier = OperationClassifier()  # Phase 10.5
 
     def route(self, query: str) -> CapabilityRoutingDecision:
-        """Route a query to the most appropriate capability.
+        """Route a query to the most appropriate capability and operation.
+
+        Phase 10.5: Now determines both WHO owns the query (capability)
+        and WHAT the user wants to do with it (operation).
 
         Reasoning process:
-        1. Find capabilities matching keywords/synonyms
-        2. Score by semantic relevance
-        3. Prefer instant/fast capabilities over slow ones
-        4. Return highest confidence match
+        1. Classify operation (READ, ADVISE, EXECUTE, etc.)
+        2. Find capabilities matching keywords/synonyms
+        3. Filter by capabilities that support the operation
+        4. Score by semantic relevance
+        5. Prefer instant/fast capabilities over slow ones
+        6. Return highest confidence match
 
         Args:
             query: Natural language query
 
         Returns:
-            CapabilityRoutingDecision with capability and reasoning
+            CapabilityRoutingDecision with capability, operation, and reasoning
         """
         query_lower = query.lower()
+
+        # Phase 10.5: Classify operation first
+        operation = self.operation_classifier.classify(query)
 
         # Step 1: Find candidates by keyword matching
         candidates = self.registry.find_by_keywords(query)
@@ -56,13 +69,25 @@ class CapabilityRouter:
             llm_capability = self.registry.get("conceptual_knowledge")
             return CapabilityRoutingDecision(
                 capability=llm_capability,
+                operation=operation,
                 confidence=0.5,
                 reasoning="No specific capability matched - falling back to LLM knowledge"
             )
 
-        # Step 2: Score candidates
+        # Step 2: Filter by capabilities that support the operation
+        supported_candidates = [
+            cap for cap in candidates
+            if not cap.supported_operations or operation in cap.supported_operations
+        ]
+
+        # If no capabilities support this operation, use all candidates
+        # (operation might be valid but not explicitly declared)
+        if not supported_candidates:
+            supported_candidates = candidates
+
+        # Step 3: Score candidates
         scored = []
-        for cap in candidates:
+        for cap in supported_candidates:
             score = self._score_capability(query_lower, cap)
             scored.append((score, cap))
 
@@ -72,10 +97,11 @@ class CapabilityRouter:
         best_score, best_capability = scored[0]
 
         # Build reasoning
-        reasoning = self._build_reasoning(query_lower, best_capability, best_score)
+        reasoning = self._build_reasoning(query_lower, best_capability, operation, best_score)
 
         return CapabilityRoutingDecision(
             capability=best_capability,
+            operation=operation,
             confidence=best_score,
             reasoning=reasoning
         )
@@ -171,9 +197,9 @@ class CapabilityRouter:
 
         return 0.7
 
-    def _build_reasoning(self, query: str, capability: CapabilityMetadata, score: float) -> str:
+    def _build_reasoning(self, query: str, capability: CapabilityMetadata, operation: Operation, score: float) -> str:
         """Build human-readable reasoning for the routing decision."""
-        parts = [f"Capability: {capability.name}"]
+        parts = [f"Capability: {capability.name}, Operation: {operation.value}"]
 
         # Explain why
         if capability.latency == LatencyCategory.INSTANT:
@@ -193,35 +219,68 @@ class CapabilityRouter:
 
         return " | ".join(parts)
 
-    def get_execution_strategy(self, capability: CapabilityMetadata) -> dict:
-        """Determine execution strategy for a capability.
+    def get_execution_strategy(self, capability: CapabilityMetadata, operation: Operation) -> dict:
+        """Determine execution strategy for a capability + operation.
 
-        Returns a dict describing how to execute this capability.
+        Phase 10.5: Execution strategy now considers BOTH capability and operation.
+
+        Returns a dict describing how to execute this capability+operation.
         """
+        from core.operations import requires_execution, requires_planning, requires_llm_synthesis
+
         strategy = {
             "capability": capability.name,
+            "operation": operation.value,
             "owner": capability.owner_module,
-            "requires_planner": capability.requires_planner,
-            "requires_executor": capability.requires_executor,
-            "requires_llm": capability.requires_llm,
+            "requires_planner": capability.requires_planner and requires_planning(operation),
+            "requires_executor": capability.requires_executor and requires_execution(operation),
+            "requires_llm": capability.requires_llm or requires_llm_synthesis(operation),
             "tools": capability.requires_tools,
             "latency": capability.latency.value,
             "produces_evidence": capability.produces_evidence
         }
 
-        # Determine execution path
-        if not capability.requires_planner and not capability.requires_executor:
-            strategy["execution_path"] = "direct"
-            strategy["explanation"] = "Answer directly from system state"
-        elif capability.requires_executor and not capability.requires_planner:
-            strategy["execution_path"] = "tool_direct"
-            strategy["explanation"] = "Execute tool directly without planning"
-        elif capability.requires_planner:
+        # Determine execution path based on operation
+        if operation == Operation.ADVISE:
+            # Advice never executes, always consults memory + LLM
+            strategy["execution_path"] = "advise"
+            strategy["requires_planner"] = False
+            strategy["requires_executor"] = False
+            strategy["explanation"] = "Provide advice without execution (consult memory + LLM)"
+        elif operation in {Operation.READ, Operation.INSPECT, Operation.RECALL}:
+            # Read operations use direct access
+            if not capability.requires_executor:
+                strategy["execution_path"] = "direct"
+                strategy["explanation"] = "Answer directly from system state"
+            else:
+                strategy["execution_path"] = "tool_direct"
+                strategy["explanation"] = "Execute read-only tool"
+        elif operation in {Operation.EXPLAIN, Operation.SUMMARIZE, Operation.REVIEW, Operation.ANALYZE}:
+            # Analysis operations need evidence + LLM synthesis
+            strategy["execution_path"] = "synthesis"
+            strategy["explanation"] = "Collect evidence and synthesize with LLM"
+        elif operation in {Operation.EXECUTE, Operation.MODIFY}:
+            # Execution operations require full pipeline
             strategy["execution_path"] = "pipeline"
+            strategy["requires_planner"] = True
+            strategy["requires_executor"] = True
             strategy["explanation"] = "Full pipeline: plan → validate → execute"
+        elif operation == Operation.SEARCH or operation == Operation.LOOKUP:
+            # Search operations may need tools
+            if capability.requires_executor:
+                strategy["execution_path"] = "tool_direct"
+                strategy["explanation"] = "Execute search tool"
+            else:
+                strategy["execution_path"] = "direct"
+                strategy["explanation"] = "Direct lookup"
         else:
-            strategy["execution_path"] = "llm"
-            strategy["explanation"] = "LLM synthesis only"
+            # Default to direct or LLM based on capability
+            if not capability.requires_executor and not capability.requires_planner:
+                strategy["execution_path"] = "direct"
+                strategy["explanation"] = "Direct answer"
+            else:
+                strategy["execution_path"] = "llm"
+                strategy["explanation"] = "LLM synthesis"
 
         return strategy
 

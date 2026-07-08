@@ -6,7 +6,8 @@ The router reasons over this metadata instead of hardcoded patterns.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Set
+from core.operations import Operation
 
 
 class CapabilityCategory(Enum):
@@ -55,6 +56,9 @@ class CapabilityMetadata:
     # Semantic matching
     keywords: list[str] = field(default_factory=list)
     synonyms: list[str] = field(default_factory=list)
+
+    # Phase 10.5: Supported operations
+    supported_operations: Set[Operation] = field(default_factory=set)
 
     # Access function (optional - for direct queries)
     accessor: Optional[Callable] = None
@@ -120,7 +124,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["ram", "ram usage", "available memory"],
-            synonyms=["memory usage", "mem"]
+            synonyms=["memory usage", "mem"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -134,7 +139,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["cpu", "processor", "cores"],
-            synonyms=["processor", "cpu cores"]
+            synonyms=["processor", "cpu cores"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -148,7 +154,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["disk", "storage", "disk space"],
-            synonyms=["disk usage", "storage", "hard drive"]
+            synonyms=["disk usage", "storage", "hard drive"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -162,7 +169,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["battery", "power", "battery level"],
-            synonyms=["battery percent", "battery status", "power level"]
+            synonyms=["battery percent", "battery status", "power level"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -176,7 +184,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["network", "internet", "connectivity", "online"],
-            synonyms=["internet status", "connection", "wifi"]
+            synonyms=["internet status", "connection", "wifi"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         # Workspace Capabilities
@@ -191,7 +200,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["project", "project name", "current project"],
-            synonyms=["project name", "what project", "which project"]
+            synonyms=["project name", "what project", "which project"],
+            supported_operations={Operation.READ, Operation.SUMMARIZE}
         ))
 
         self.register(CapabilityMetadata(
@@ -205,7 +215,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["phase", "milestone", "current phase"],
-            synonyms=["what phase", "which phase", "current milestone"]
+            synonyms=["what phase", "which phase", "current milestone"],
+            supported_operations={Operation.READ}
         ))
 
         self.register(CapabilityMetadata(
@@ -219,7 +230,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["languages", "programming languages"],
-            synonyms=["what languages", "which languages", "language"]
+            synonyms=["what languages", "which languages", "language"],
+            supported_operations={Operation.READ}
         ))
 
         self.register(CapabilityMetadata(
@@ -233,7 +245,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["project type", "type of project"],
-            synonyms=["what type", "project kind"]
+            synonyms=["what type", "project kind"],
+            supported_operations={Operation.READ}
         ))
 
         # Git Capabilities
@@ -248,7 +261,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["branch", "git branch", "current branch"],
-            synonyms=["what branch", "which branch"]
+            synonyms=["what branch", "which branch"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -262,7 +276,8 @@ class CapabilityRegistry:
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
             keywords=["git status", "git clean", "git dirty", "uncommitted"],
-            synonyms=["repo status", "repository status", "working tree"]
+            synonyms=["repo status", "repository status", "working tree"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -277,7 +292,8 @@ class CapabilityRegistry:
             requires_tools=["git_commit", "git_diff", "git_log", "git_add"],
             latency=LatencyCategory.MODERATE,
             keywords=["git commit", "git diff", "git log", "git add"],
-            synonyms=["commit", "diff", "log"]
+            synonyms=["commit", "diff", "log"],
+            supported_operations={Operation.EXECUTE, Operation.MODIFY, Operation.INSPECT, Operation.COMPARE}
         ))
 
         # Memory Capabilities
@@ -292,7 +308,8 @@ class CapabilityRegistry:
             requires_llm=True,  # LLM synthesizes memory results
             latency=LatencyCategory.FAST,
             keywords=["remember", "taught", "teach", "preference", "recall"],
-            synonyms=["my name", "what did i", "do you remember"]
+            synonyms=["my name", "what did i", "do you remember"],
+            supported_operations={Operation.RECALL, Operation.REMEMBER, Operation.REFLECT, Operation.ADVISE}
         ))
 
         # Filesystem Capabilities
@@ -308,7 +325,8 @@ class CapabilityRegistry:
             requires_tools=["search_files"],
             latency=LatencyCategory.MODERATE,
             keywords=["where is", "find", "search", "locate", "memorymanager"],
-            synonyms=["where is", "find file", "search for", "locate", "find class", "find function"]
+            synonyms=["where is", "find file", "search for", "locate", "find class", "find function"],
+            supported_operations={Operation.SEARCH, Operation.LOOKUP}
         ))
 
         self.register(CapabilityMetadata(
@@ -323,7 +341,8 @@ class CapabilityRegistry:
             requires_tools=["read_file"],
             latency=LatencyCategory.FAST,
             keywords=["read", "show", "cat", "view file"],
-            synonyms=["read file", "show file", "view"]
+            synonyms=["read file", "show file", "view"],
+            supported_operations={Operation.READ, Operation.INSPECT}
         ))
 
         self.register(CapabilityMetadata(
@@ -338,7 +357,8 @@ class CapabilityRegistry:
             requires_tools=["write_file", "replace_in_file"],
             latency=LatencyCategory.MODERATE,
             keywords=["write", "create", "modify", "edit", "update file"],
-            synonyms=["write file", "create file", "edit file"]
+            synonyms=["write file", "create file", "edit file"],
+            supported_operations={Operation.MODIFY, Operation.EXECUTE}
         ))
 
         # Knowledge Capabilities
@@ -354,7 +374,8 @@ class CapabilityRegistry:
             produces_evidence=False,
             latency=LatencyCategory.SLOW,
             keywords=["explain", "what is", "how does", "why", "concept"],
-            synonyms=["explain", "tell me about", "describe"]
+            synonyms=["explain", "tell me about", "describe"],
+            supported_operations={Operation.EXPLAIN, Operation.COMPARE, Operation.ANALYZE, Operation.ADVISE}
         ))
 
         # Execution Capabilities
@@ -369,7 +390,8 @@ class CapabilityRegistry:
             requires_llm=True,
             latency=LatencyCategory.SLOW,
             keywords=["install", "setup", "configure", "build", "deploy", "changed", "review repository", "summarize project"],
-            synonyms=["execute", "run", "perform", "what changed"]
+            synonyms=["execute", "run", "perform", "what changed"],
+            supported_operations={Operation.EXECUTE, Operation.MODIFY, Operation.PLAN, Operation.REVIEW, Operation.SUMMARIZE}
         ))
 
 

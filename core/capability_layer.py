@@ -2,6 +2,8 @@
 
 Combines Capability Router and Executor into a single unified interface.
 This is the entry point for all capability-based queries.
+
+Phase 10.5: Now understands operation semantics (WHAT user wants to do).
 """
 
 import asyncio
@@ -13,6 +15,7 @@ from core.world import WorldState
 from core.project_context import ProjectContext
 from core.world_manager import observe_world
 from core.world import RuntimeState
+from core.operations import Operation
 
 
 class CapabilityLayer:
@@ -43,12 +46,20 @@ class CapabilityLayer:
             print(f"[capability] {decision.reasoning}")
 
         # Step 2: Get execution strategy
-        strategy = self.router.get_execution_strategy(decision.capability)
+        strategy = self.router.get_execution_strategy(decision.capability, decision.operation)
 
         # Step 3: Handle based on execution path
-        if strategy["execution_path"] == "direct":
+        if strategy["execution_path"] == "advise":
+            # Phase 10.5: ADVISE path (never executes)
+            answer, metadata = await self._handle_advise(query, decision, strategy, verbose)
+
+        elif strategy["execution_path"] == "direct":
             # Direct answer from system state
             answer, metadata = await self._handle_direct(query, decision, strategy, verbose)
+
+        elif strategy["execution_path"] == "synthesis":
+            # Phase 10.5: Synthesis path (evidence + LLM)
+            answer, metadata = await self._handle_synthesis(query, decision, strategy, verbose)
 
         elif strategy["execution_path"] == "tool_direct":
             # Tool execution without planning
@@ -69,14 +80,79 @@ class CapabilityLayer:
         # Add capability metadata
         metadata["capability"] = decision.capability.name
         metadata["category"] = decision.capability.category.value
+        metadata["operation"] = decision.operation.value  # Phase 10.5
         metadata["confidence"] = decision.confidence
 
         return answer, metadata
+
+    async def _handle_advise(
+        self, query: str, decision: CapabilityRoutingDecision, strategy: dict, verbose: bool
+    ) -> Tuple[str, dict]:
+        """Handle ADVISE operations (advice without execution).
+
+        Phase 10.5: ADVISE operations NEVER execute tools or invoke planner.
+        They consult memory for preferences, then LLM for synthesis.
+        """
+        from memory.manager import MemoryManager
+        from core.model_client import call_model
+        import time
+
+        memory_manager = MemoryManager()
+
+        t_start = time.perf_counter()
+
+        # Step 1: Check memory for relevant preferences/teachings
+        memory_results = []
+        try:
+            memory_results = await asyncio.to_thread(memory_manager.search, query, limit=3)
+        except Exception:
+            pass
+
+        # Step 2: Build prompt with memory context
+        prompt_parts = []
+
+        if memory_results:
+            prompt_parts.append("User's remembered preferences:")
+            for result in memory_results:
+                content = result.get("content", result.get("text", ""))
+                if content:
+                    prompt_parts.append(f"- {content}")
+            prompt_parts.append("")
+
+        prompt_parts.append(f"User question: {query}")
+        prompt_parts.append("")
+        prompt_parts.append("Provide advice based on the user's preferences above. "
+                           "Do NOT execute anything. Just recommend the best approach.")
+
+        prompt = "\n".join(prompt_parts)
+
+        # Step 3: LLM synthesis (no execution)
+        response = await call_model(prompt, enable_thinking=False)
+
+        latency_ms = (time.perf_counter() - t_start) * 1000
+
+        metadata = {
+            "execution_path": "advise",
+            "operation": decision.operation.value,
+            "latency_ms": latency_ms,
+            "source": "Memory + LLM",
+            "used_llm": True,
+            "used_memory": len(memory_results) > 0,
+            "executed_tools": False
+        }
+
+        return response, metadata
 
     async def _handle_direct(
         self, query: str, decision: CapabilityRoutingDecision, strategy: dict, verbose: bool
     ) -> Tuple[str, dict]:
         """Handle direct queries (instant answers from system state)."""
+        from core.operations import Operation
+
+        # Phase 10.5: ADVISE operation gets special handling
+        if decision.operation == Operation.ADVISE:
+            return await self._handle_advise(query, decision, strategy, verbose)
+
         # Build world state and project context
         world = await observe_world(cwd=".", runtime=RuntimeState())
         project_context = ProjectContext.from_workspace(world.workspace, ".")
@@ -91,12 +167,42 @@ class CapabilityLayer:
 
         metadata = {
             "execution_path": "direct",
+            "operation": decision.operation.value,
             "latency_ms": result.latency_ms,
             "source": result.source,
             "used_llm": result.used_llm
         }
 
         return answer, metadata
+
+    async def _handle_synthesis(
+        self, query: str, decision: CapabilityRoutingDecision, strategy: dict, verbose: bool
+    ) -> Tuple[str, dict]:
+        """Handle synthesis operations (evidence collection + LLM).
+
+        Phase 10.5: EXPLAIN, SUMMARIZE, REVIEW, ANALYZE operations collect
+        evidence from authoritative sources, then LLM synthesizes.
+        """
+        from core.model_client import call_model
+        import time
+
+        t_start = time.perf_counter()
+
+        # For now, delegate to LLM directly
+        # Future: collect evidence first, then synthesize
+        response = await call_model(query, enable_thinking=False)
+
+        latency_ms = (time.perf_counter() - t_start) * 1000
+
+        metadata = {
+            "execution_path": "synthesis",
+            "operation": decision.operation.value,
+            "latency_ms": latency_ms,
+            "source": "LLM synthesis",
+            "used_llm": True
+        }
+
+        return response, metadata
 
     async def _handle_tool_direct(
         self, query: str, decision: CapabilityRoutingDecision, strategy: dict, verbose: bool
