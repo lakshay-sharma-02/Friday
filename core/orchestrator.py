@@ -41,13 +41,23 @@ class Orchestrator:
                     response = f"Pipeline execution crashed: {e}"
             elif intent.kind == "chat":
                 import time as _time
+                from core.fast_path import handle_fast_path
                 from memory.manager import MemoryManager
-                memory_manager = MemoryManager()
 
-                # Retrieve relevant memories
-                t_search = _time.perf_counter()
-                memory_results = await asyncio.to_thread(memory_manager.search, text, limit=5)
-                dt_search = _time.perf_counter() - t_search
+                # Try fast path first (greetings, simple queries)
+                fast_response = handle_fast_path(text)
+                if fast_response:
+                    response = fast_response
+                    from core.output_mode import log_debug
+                    log_debug(f"[orchestrator] fast path: {text[:50]}")
+                    intent.metadata = {"fast_path": True}
+                else:
+                    memory_manager = MemoryManager()
+
+                    # Retrieve relevant memories
+                    t_search = _time.perf_counter()
+                    memory_results = await asyncio.to_thread(memory_manager.search, text, limit=5)
+                    dt_search = _time.perf_counter() - t_search
 
                 # Build explicit, typed long-term memory sections.
                 # Episodic memories are run-history JSON and are not injected into chat.
@@ -88,24 +98,24 @@ class Orchestrator:
                     sections.append(f"User: {text}")
                     prompt = "\n".join(sections)
 
-                model_t0 = _time.perf_counter()
-                response = await call_model(prompt, enable_thinking=False)
-                model_dt = _time.perf_counter() - model_t0
+                    model_t0 = _time.perf_counter()
+                    response = await call_model(prompt, enable_thinking=False)
+                    model_dt = _time.perf_counter() - model_t0
 
-                # Decide extraction (deterministic gate) and run it in the background.
-                will_extract = memory_manager.should_extract(text)
-                if will_extract:
-                    asyncio.create_task(memory_manager.process_chat(intent.id, text, response))
+                    # Decide extraction (deterministic gate) and run it in the background.
+                    will_extract = memory_manager.should_extract(text)
+                    if will_extract:
+                        asyncio.create_task(memory_manager.process_chat(intent.id, text, response))
 
-                total_dt = _time.perf_counter() - t_search
-                from core.output_mode import log_verbose
-                log_verbose(
-                    f"[chat] memory_search={dt_search:.2f}s "
-                    f"chat_generation={model_dt:.2f}s "
-                    f"memory_extraction={'queued' if will_extract else 'skipped'} "
-                    f"total={total_dt:.2f}s"
-                )
-                intent.metadata = {"model_time": model_dt}
+                    total_dt = _time.perf_counter() - t_search
+                    from core.output_mode import log_verbose
+                    log_verbose(
+                        f"[chat] memory_search={dt_search:.2f}s "
+                        f"chat_generation={model_dt:.2f}s "
+                        f"memory_extraction={'queued' if will_extract else 'skipped'} "
+                        f"total={total_dt:.2f}s"
+                    )
+                    intent.metadata = {"model_time": model_dt}
             elif intent.kind == "hybrid":
                 # Hybrid execution pipeline: tools first, then LLM summary
                 pipeline_run = PipelineRun(intent=intent)
