@@ -110,7 +110,7 @@ If no, output an empty JSON object: {{}}
             original_prompt = client_module.SYSTEM_PROMPT
             client_module.SYSTEM_PROMPT = "You are a data extraction system. Output only valid JSON."
             
-            result = await call_model(prompt)
+            result = await call_model(prompt, stream_to_stdout=False)
             
             # Restore system prompt
             client_module.SYSTEM_PROMPT = original_prompt
@@ -126,7 +126,7 @@ If no, output an empty JSON object: {{}}
                 mem_type = data.get("type", "Fact")
                 if mem_type not in self.store.VALID_TYPES:
                     mem_type = "Fact"
-                    
+
                 note_id = self.store.store_memory(
                     memory_type=mem_type,
                     content=data["content"],
@@ -136,6 +136,7 @@ If no, output an empty JSON object: {{}}
                 )
                 if note_id:
                     get_worker().enqueue(note_id)
+                    print(f"[memory] stored {mem_type}: {data['content'][:60]}...", file=sys.stderr)
         except Exception as e:
             print(f"[memory] failed to extract chat memory: {e}", file=sys.stderr)
 

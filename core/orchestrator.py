@@ -22,8 +22,9 @@ class Orchestrator:
         while True:
             intent = await self.bus.consume()
 
-            # Log what we received
-            print(
+            # Log what we received (debug only)
+            from core.output_mode import log_debug
+            log_debug(
                 f"[orchestrator] got intent {intent.id} ({intent.kind}) "
                 f"from {intent.source}: {intent.payload}"
             )
@@ -97,12 +98,12 @@ class Orchestrator:
                     asyncio.create_task(memory_manager.process_chat(intent.id, text, response))
 
                 total_dt = _time.perf_counter() - t_search
-                print(
+                from core.output_mode import log_verbose
+                log_verbose(
                     f"[chat] memory_search={dt_search:.2f}s "
                     f"chat_generation={model_dt:.2f}s "
                     f"memory_extraction={'queued' if will_extract else 'skipped'} "
-                    f"total={total_dt:.2f}s",
-                    file=sys.stderr,
+                    f"total={total_dt:.2f}s"
                 )
                 intent.metadata = {"model_time": model_dt}
             elif intent.kind == "hybrid":

@@ -42,10 +42,12 @@ async def close_client():
         _CLIENT = None
 
 
-async def call_model(text: str, route: str = "cheap_chat") -> str:
+async def call_model(text: str, route: str = "cheap_chat", enable_thinking: bool = True, stream_to_stdout: bool = True) -> str:
     """Send a chat prompt to the configured model backend with streaming.
 
     Returns the model's text reply, or the configured fallback string on failure.
+    enable_thinking=False disables chain-of-thought tokens where the backend supports it.
+    stream_to_stdout=False suppresses printing to stdout (for background processing).
     """
     try:
         routes = _CONFIG.get("routes", {})
@@ -72,6 +74,7 @@ async def call_model(text: str, route: str = "cheap_chat") -> str:
                 {"role": "user", "content": text}
             ],
             "stream": True,
+            "enable_thinking": enable_thinking,
         }
 
         print(f"[model_client] routing to model={model} base_url={base_url}", file=sys.stderr)
@@ -108,20 +111,14 @@ async def call_model(text: str, route: str = "cheap_chat") -> str:
 
                     delta = choices[0].get("delta", {})
                     content = delta.get("content") or ""
-                    reasoning = delta.get("reasoning_content") or ""
-
-                    if reasoning:
-                        if t_first_token is None:
-                            t_first_token = time.perf_counter()
-                        # Print reasoning in grey
-                        print(f"\033[90m{reasoning}\033[0m", end="", flush=True)
 
                     if content:
                         if t_first_token is None:
                             t_first_token = time.perf_counter()
 
-                        # Print chunk immediately for streaming effect
-                        print(content, end="", flush=True)
+                        # Print chunk immediately for streaming effect (unless suppressed)
+                        if stream_to_stdout:
+                            print(content, end="", flush=True)
                         accumulated.append(content)
 
                 except json.JSONDecodeError:
@@ -130,8 +127,9 @@ async def call_model(text: str, route: str = "cheap_chat") -> str:
 
         t_end = time.perf_counter()
 
-        # Print newline after stream ends
-        print()
+        # Print newline after stream ends (unless suppressed)
+        if stream_to_stdout:
+            print()
 
         # Log served model
         if served_by_model:

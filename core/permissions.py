@@ -62,7 +62,8 @@ def check_permission(tool_name: str, args: dict, intent: "Intent" = None) -> boo
     # Check if stdin is a terminal (interactive)
     if not sys.stdin.isatty():
         # Non-interactive mode: auto-approve tier 1 to avoid blocking
-        print(f"[permissions] auto-approving {tool_name} (non-interactive)", file=sys.stderr)
+        from core.output_mode import log_debug
+        log_debug(f"[permissions] auto-approving {tool_name} (non-interactive)")
         return True
 
     print(f"\n[Permission required]")

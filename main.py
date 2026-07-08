@@ -1,5 +1,6 @@
 """Friday: boots the event bus, orchestrator, autonomous triggers, and CLI interface."""
 
+import sys
 import asyncio
 from core import EventBus, Orchestrator
 from core.model_client import close_client
@@ -9,6 +10,15 @@ from triggers import start_scheduler, start_fs_watch
 
 async def main():
     """Start Friday's core components and run the CLI."""
+    from core.output_mode import log_debug, should_show_verbose
+    from memory import initialize_memory_subsystem
+
+    if should_show_verbose():
+        print("Friday initializing...", file=sys.stderr)
+
+    log_debug("[main] initializing memory subsystem")
+    initialize_memory_subsystem()
+    log_debug("[main] memory subsystem ready")
 
     # Create the event transport
     bus = EventBus()
@@ -44,6 +54,9 @@ async def main():
         except asyncio.CancelledError:
             pass
         await close_client()
+        
+        from memory import get_worker
+        get_worker().stop()
 
 
 if __name__ == "__main__":

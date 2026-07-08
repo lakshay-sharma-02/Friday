@@ -13,7 +13,14 @@ async def run_cli(bus: EventBus) -> None:
 
     loop = asyncio.get_event_loop()
 
-    print("Friday CLI ready. Type 'exit' or 'quit' to stop.")
+    from core.output_mode import get_mode, OutputMode
+
+    # Startup banner
+    mode = get_mode()
+    if mode == OutputMode.NORMAL:
+        print("Friday CLI ready. Type 'exit' or 'quit' to stop.")
+    else:
+        print(f"Friday CLI ready (mode: {mode.value}). Type 'exit' or 'quit' to stop.")
     
     verbose = os.getenv("VERBOSE") == "1" or os.getenv("VERBOSE_PIPELINE") == "1"
 
