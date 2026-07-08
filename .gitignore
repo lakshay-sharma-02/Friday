@@ -160,3 +160,6 @@ cython_debug/
 # Friday Specific logs and outputs
 *.log
 *_output.txt
+
+# Friday Memory DB
+.friday_memory.db*

@@ -28,7 +28,7 @@ def _get_client():
     global _CLIENT
     if _CLIENT is None:
         _CLIENT = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
+            timeout=httpx.Timeout(120.0),
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
         )
     return _CLIENT
@@ -107,7 +107,14 @@ async def call_model(text: str, route: str = "cheap_chat") -> str:
                         continue
 
                     delta = choices[0].get("delta", {})
-                    content = delta.get("content", "")
+                    content = delta.get("content") or ""
+                    reasoning = delta.get("reasoning_content") or ""
+
+                    if reasoning:
+                        if t_first_token is None:
+                            t_first_token = time.perf_counter()
+                        # Print reasoning in grey
+                        print(f"\033[90m{reasoning}\033[0m", end="", flush=True)
 
                     if content:
                         if t_first_token is None:
@@ -141,7 +148,7 @@ async def call_model(text: str, route: str = "cheap_chat") -> str:
     except httpx.HTTPStatusError as e:
         print(f"[model_client] HTTP error: {e}", file=sys.stderr)
     except httpx.TimeoutException:
-        print("[model_client] request timed out after 30s", file=sys.stderr)
+        print("[model_client] request timed out after 120s", file=sys.stderr)
     except httpx.RequestError as e:
         print(f"[model_client] network error: {e}", file=sys.stderr)
     except (KeyError, ValueError, OSError) as e:

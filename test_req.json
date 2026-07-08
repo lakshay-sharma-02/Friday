@@ -1,0 +1,5 @@
+{
+  "model": "oc/deepseek-v4-flash-free",
+  "messages": [{"role": "user", "content": "hello"}],
+  "stream": false
+}

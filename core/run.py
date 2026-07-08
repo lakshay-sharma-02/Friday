@@ -17,3 +17,4 @@ class PipelineRun:
     max_retries: int = 2
     status: str = "pending"
     world: "WorldState | None" = None
+    plan_risk_level: str = "NONE"

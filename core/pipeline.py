@@ -5,12 +5,11 @@ import os
 import time
 from dataclasses import replace
 from core.run import PipelineRun
-from core.executor import validate_plan
+from core.plan_validation import validate_and_prepare_plan
 from core.world_manager import observe_world
 from core.world import RuntimeState, WorldState
 from core.health import evaluate_health, HealthLevel
-from core.events import EventLog, ObservationEvent
-from core.rules import evaluate_rules, apply_rule, RuleAction
+from core.events import EventLog
 from core.watchdog import ExecutionWatchdog
 from agents.planner import create_plan
 
@@ -87,153 +86,6 @@ def _format_world_verbose(world: WorldState, health, events: EventLog) -> None:
     print(file=sys.stderr)
 
 
-def _determine_refresh_domains(tool_name: str) -> set[str]:
-    """Determine which observation domains need refreshing after a tool execution.
-
-    Args:
-        tool_name: Name of the tool that was executed
-
-    Returns:
-        Set of domain names to refresh (workspace, network, processes)
-    """
-    # Git operations affect workspace
-    if tool_name in ["git_status", "git_commit", "git_add"]:
-        return {"workspace"}
-
-    # Shell commands can affect workspace and spawn processes
-    if tool_name == "shell":
-        return {"workspace", "processes"}
-
-    # Write operations affect workspace
-    if tool_name in ["write_file", "edit_file"]:
-        return {"workspace"}
-
-    # Read operations don't require refresh
-    if tool_name in ["read_file"]:
-        return set()
-
-    # Default: refresh workspace and processes for safety
-    return {"workspace", "processes"}
-
-
-async def _execute_step_with_observation(
-    step: dict,
-    run: PipelineRun,
-    world: WorldState,
-    health,
-    events: EventLog,
-    watchdog: ExecutionWatchdog,
-    tracked_pids: set[int],
-) -> tuple[dict, WorldState]:
-    """Execute a single step and observe the result.
-
-    Returns:
-        (execution_log_entry, updated_world_state)
-    """
-    from tools.registry import TOOL_REGISTRY
-    from core.permissions import check_permission
-    import asyncio
-
-    tool_name = step["tool"]
-    args = step.get("args", {})
-    description = step.get("description", "")
-
-    print(f"\n[{tool_name}] {description}", file=sys.stderr)
-
-    # Check permissions (pass intent for ceiling check)
-    intent_for_check = getattr(run, 'intent', None)
-    if not check_permission(tool_name, args, intent_for_check):
-        log_entry = {
-            "tool": tool_name,
-            "args": args,
-            "started_at": time.time(),
-            "ended_at": time.time(),
-            "duration": 0.0,
-            "output": "Blocked: exceeds permission ceiling or user denied",
-            "exit_code": None,
-            "success": False,
-            "skipped": True,
-        }
-        print("[blocked]", file=sys.stderr)
-        return log_entry, world
-
-    # Start watchdog monitoring
-    watchdog.start_monitoring(tool_name)
-
-    # Execute tool
-    handler = TOOL_REGISTRY[tool_name]["handler"]
-
-    t0 = time.time()
-    try:
-        result = await asyncio.to_thread(handler, **args)
-        t1 = time.time()
-
-        log_entry = {
-            "tool": tool_name,
-            "args": args,
-            "started_at": t0,
-            "ended_at": t1,
-            "duration": t1 - t0,
-            "output": result.get("output", ""),
-            "exit_code": result.get("exit_code"),
-            "success": result.get("success", False),
-            "pid": result.get("pid"),  # Track PID for shell commands
-        }
-
-        print(result.get("output", ""))
-
-        if not result.get("success"):
-            print(f"[failed: exit_code={result.get('exit_code')}]", file=sys.stderr)
-
-    except Exception as e:
-        t1 = time.time()
-        error_msg = f"Executor error: {str(e)}"
-
-        log_entry = {
-            "tool": tool_name,
-            "args": args,
-            "started_at": t0,
-            "ended_at": t1,
-            "duration": t1 - t0,
-            "output": error_msg,
-            "exit_code": None,
-            "success": False,
-        }
-
-        print(error_msg, file=sys.stderr)
-
-    finally:
-        # Stop watchdog monitoring
-        watchdog.stop_monitoring()
-
-    # Observe after execution
-    refresh_domains = _determine_refresh_domains(tool_name)
-
-    if VERBOSE_PIPELINE and refresh_domains:
-        print(f"[observe] refreshing: {', '.join(refresh_domains)}", file=sys.stderr)
-
-    # Update runtime state
-    new_runtime = replace(world.runtime, last_observation_time=time.time())
-
-    # Observe with partial refresh
-    updated_world = await observe_world(
-        cwd=world.workspace.cwd,
-        runtime=new_runtime,
-        tracked_pids=tracked_pids,
-        refresh_only=refresh_domains if refresh_domains else None,
-    )
-
-    # Detect changes and generate events
-    if "workspace" in refresh_domains:
-        if updated_world.workspace.git_clean != world.workspace.git_clean:
-            events.add(ObservationEvent.git_state_changed(
-                f"Git state: {'clean' if updated_world.workspace.git_clean else 'dirty'}",
-                {"clean": updated_world.workspace.git_clean}
-            ))
-
-    return log_entry, updated_world
-
-
 async def run_pipeline(run: PipelineRun) -> str:
     """Execute a task pipeline with continuous observation.
 
@@ -301,7 +153,20 @@ async def run_pipeline(run: PipelineRun) -> str:
         run.plan = plan
         print(f"[pipeline] plan has {len(plan)} step(s)", file=sys.stderr)
 
-        valid_steps = validate_plan(plan)
+        # Validate + repair + risk-tag before anything reaches the executor.
+        validation = validate_and_prepare_plan(plan)
+        if not validation["accepted"]:
+            detail = "; ".join(
+                f"step {e['step']}: {e['error']}" for e in validation["errors"]
+            )
+            print(f"[pipeline] plan rejected: {detail}", file=sys.stderr)
+            return f"Plan rejected: {validation['message']} ({detail})"
+
+        for r in validation["repairs"]:
+            print(f"[pipeline] repaired step {r['step']}: {r['repairs']}", file=sys.stderr)
+
+        valid_steps = validation["steps"]
+        run.plan_risk_level = validation["risk_level"]
 
         if not valid_steps:
             return "Plan validation failed - no valid steps to execute."
@@ -311,65 +176,11 @@ async def run_pipeline(run: PipelineRun) -> str:
 
         print(f"[pipeline] executing {len(valid_steps)} step(s)...", file=sys.stderr)
 
-        # Execute steps with continuous observation
-        for i, step in enumerate(valid_steps):
-            run.world.runtime.current_step = i + 1
-            run.world.runtime.running_tool = step["tool"]
-
-            # Check for long-running shell processes and kill them
-            # Look for shell commands that have been running too long
-            if len(run.execution_log) > 0:
-                last_entry = run.execution_log[-1]
-                if last_entry.get("tool") == "shell" and last_entry.get("pid"):
-                    elapsed_since_start = time.time() - last_entry.get("started_at", 0)
-                    if elapsed_since_start > 300:  # 5 minutes
-                        from tools.shell import kill_process
-                        pid = last_entry["pid"]
-                        print(f"[rule] ✗ Shell process {pid} exceeded timeout ({elapsed_since_start:.0f}s)", file=sys.stderr)
-                        print(f"[rule] Terminating process {pid}", file=sys.stderr)
-                        killed = kill_process(pid)
-                        if killed:
-                            print(f"[rule] Process {pid} terminated", file=sys.stderr)
-
-            # Check rules before execution
-            rule_result = evaluate_rules(
-                run.world,
-                health,
-                step["tool"],
-                run.world.runtime.elapsed_seconds
-            )
-
-            if rule_result and rule_result.action != RuleAction.CONTINUE:
-                # Apply rule and get blocking decision
-                rule_action = apply_rule(rule_result, run.world)
-
-                # Check if rule blocks execution
-                if rule_action.get("blocked", False):
-                    log_entry = {
-                        "tool": step["tool"],
-                        "args": step.get("args", {}),
-                        "started_at": time.time(),
-                        "ended_at": time.time(),
-                        "duration": 0.0,
-                        "output": rule_action["message"],
-                        "exit_code": None,
-                        "success": False,
-                    }
-                    run.execution_log.append(log_entry)
-                    continue
-
-            # Execute step with observation
-            log_entry, run.world = await _execute_step_with_observation(
-                step, run, run.world, health, events, watchdog, tracked_pids
-            )
-            run.execution_log.append(log_entry)
-
-            # Re-evaluate health after execution
-            health = evaluate_health(run.world.network.internet_reachable)
-
-            # Show updated world state if verbose
-            if VERBOSE_PIPELINE:
-                _format_world_verbose(run.world, health, events)
+        # Delegate execution loop to Executor
+        from core.executor import execute_plan
+        health = await execute_plan(
+            valid_steps, run, health, events, watchdog, tracked_pids
+        )
 
         # Check for failures after all steps
         failures = [entry for entry in run.execution_log if not entry["success"]]

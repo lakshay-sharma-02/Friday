@@ -16,9 +16,85 @@ from tools.git import (
     git_reset,
     git_clone,
 )
+from tools.http import (
+    http_get,
+    http_post,
+    http_put,
+    http_delete,
+    download_file,
+    upload_file,
+)
 
 
 TOOL_REGISTRY = {
+    "http_get": {
+        "description": "Perform an HTTP GET request",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to request"},
+            "params": {"type": "object", "required": False, "description": "Query parameters"},
+            "headers": {"type": "object", "required": False, "description": "HTTP headers"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 30.0)"},
+            "allow_redirects": {"type": "boolean", "required": False, "description": "Follow redirects (default: True)"},
+        },
+        "handler": http_get,
+    },
+    "http_post": {
+        "description": "Perform an HTTP POST request",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to request"},
+            "json": {"type": "object", "required": False, "description": "JSON body (dict)"},
+            "data": {"type": "object", "required": False, "description": "Form data (dict)"},
+            "content": {"type": "string", "required": False, "description": "Raw string body"},
+            "headers": {"type": "object", "required": False, "description": "HTTP headers"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 30.0)"},
+        },
+        "handler": http_post,
+    },
+    "http_put": {
+        "description": "Perform an HTTP PUT request",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to request"},
+            "json": {"type": "object", "required": False, "description": "JSON body (dict)"},
+            "data": {"type": "object", "required": False, "description": "Form data (dict)"},
+            "content": {"type": "string", "required": False, "description": "Raw string body"},
+            "headers": {"type": "object", "required": False, "description": "HTTP headers"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 30.0)"},
+        },
+        "handler": http_put,
+    },
+    "http_delete": {
+        "description": "Perform an HTTP DELETE request",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to request"},
+            "headers": {"type": "object", "required": False, "description": "HTTP headers"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 30.0)"},
+        },
+        "handler": http_delete,
+    },
+    "download_file": {
+        "description": "Download a file from a URL",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to download from"},
+            "path": {"type": "string", "required": True, "description": "Local path to save the file"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 60.0)"},
+            "max_size_bytes": {"type": "integer", "required": False, "description": "Maximum allowed file size in bytes"},
+            "overwrite": {"type": "boolean", "required": False, "description": "Overwrite existing file (default: False)"},
+        },
+        "handler": download_file,
+    },
+    "upload_file": {
+        "description": "Upload a local file to a URL",
+        "args": {
+            "url": {"type": "string", "required": True, "description": "URL to upload to"},
+            "path": {"type": "string", "required": True, "description": "Local path of the file to upload"},
+            "method": {"type": "string", "required": False, "description": "HTTP method (POST or PUT, default: POST)"},
+            "field_name": {"type": "string", "required": False, "description": "Form field name for the file (default: file)"},
+            "headers": {"type": "object", "required": False, "description": "HTTP headers"},
+            "timeout": {"type": "number", "required": False, "description": "Timeout in seconds (default: 60.0)"},
+            "raw": {"type": "boolean", "required": False, "description": "Upload raw file content instead of multipart form (default: False)"},
+        },
+        "handler": upload_file,
+    },
     "shell": {
         "description": "Execute an OS command (no shell interpretation); returns stdout, stderr, exit code, duration, pid",
         "args": {
