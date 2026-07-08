@@ -106,7 +106,7 @@ flowchart TD
 - **Purpose**: Retain learned information across sessions and tasks.
 - **Inputs**: Lessons emitted by the Planner, execution outcomes, explicit teaching.
 - **Outputs**: Relevant historical context for the Planner.
-- **Responsibilities**: Store and retrieve constraints, preferences, and important files based on relevance.
+- **Responsibilities**: The `MemoryManager` orchestrates admission and retrieval. It records everything to history, but only promotes novel/failed runs or explicit constraints ("LESSONS") into the `MemoryStore`.
 - **NEVER**: Make decisions or execute tools.
 
 ### Scheduler
@@ -187,10 +187,12 @@ Tools are the hands of the system.
 
 Memory allows the agent to learn constraints without rewriting its core code.
 
-- **Storage**: Data is categorized by importance (tiers). Trivial runs might be discarded; explicit user instructions or learned constraints ("LESSONS") are persisted.
-- **Retrieval**: Retrieval is currently deterministic. When a task begins, relevant memories are fetched based on keywords, recent context, or explicit tags.
-- **Lessons**: The Planner can emit a `LESSON` string at the end of a plan if it discovers a non-obvious constraint (e.g., "The test suite requires the `--features full` flag").
-- **Teaching**: Users can explicitly teach Friday rules, which are embedded into the active memory context.
+- **Manager**: `MemoryManager` acts as the single entry point. It handles lesson extraction and decides what is worth keeping.
+- **History vs Memory**: All executions are written to a raw `history` table. Only failed tasks, retried tasks, or tasks yielding an explicit lesson pass the admission gate to become `Episodic` memories.
+- **Storage**: Curated data (`Episodic`, `Lesson`, `Teaching`) is persisted in the `MemoryStore`.
+- **Retrieval**: Retrieval is currently deterministic (`MemoryRetriever` and `Ranking`). When a task begins, relevant memories are fetched based on keywords and explicitly tagged contexts.
+- **Lessons**: The Planner can emit a `LESSON:` string at the end of a plan if it discovers a non-obvious constraint (e.g., "The test suite requires the `--features full` flag"). The `MemoryManager` extracts this and stores it as a `Lesson`.
+- **Teaching**: Users can explicitly teach Friday rules, which are stored as `Teaching` memories and embedded into the active memory context.
 
 *Note: The retrieval mechanisms are designed to be deterministic today but can evolve into semantic vector searches in the future without altering the overarching architecture.*
 
