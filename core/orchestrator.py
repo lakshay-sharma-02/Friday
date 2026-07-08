@@ -1,5 +1,6 @@
 """Orchestrator: the kernel that processes every Intent flowing through Friday."""
 
+import sys
 import asyncio
 from .bus import EventBus
 from .intent import Intent
@@ -38,10 +39,71 @@ class Orchestrator:
                 except Exception as e:
                     response = f"Pipeline execution crashed: {e}"
             elif intent.kind == "chat":
-                # Chat path unchanged
-                model_t0 = time.perf_counter()
-                response = await call_model(text)
-                model_dt = time.perf_counter() - model_t0
+                import time as _time
+                from memory.manager import MemoryManager
+                memory_manager = MemoryManager()
+
+                # Retrieve relevant memories
+                t_search = _time.perf_counter()
+                memory_results = await asyncio.to_thread(memory_manager.search, text, limit=5)
+                dt_search = _time.perf_counter() - t_search
+
+                # Build explicit, typed long-term memory sections.
+                # Episodic memories are run-history JSON and are not injected into chat.
+                # Field names come straight from the retriever (content/type), not the
+                # legacy shim (text/note_source) — a prior mismatch made injection a no-op.
+                SECTION_ORDER = [
+                    ("Teaching", "Teaching (Highest Priority)"),
+                    ("Preference", "Preference"),
+                    ("Knowledge", "Knowledge"),
+                    ("Lesson", "Lessons"),
+                    ("Fact", "Facts"),
+                ]
+                grouped = {t: [] for t, _ in SECTION_ORDER}
+                for r in memory_results:
+                    mtype = r.get("type")
+                    content = r.get("content", "")
+                    if mtype in grouped and content:
+                        grouped[mtype].append(content)
+
+                prompt = text
+                if any(grouped.values()):
+                    sections = ["LONG TERM MEMORY"]
+                    for mtype, header in SECTION_ORDER:
+                        items = grouped[mtype]
+                        if not items:
+                            continue
+                        sections.append("")
+                        sections.append(header)
+                        if mtype == "Teaching":
+                            sections.append("Teaching overrides default model knowledge.")
+                        for c in items:
+                            sections.append(f"- {c}")
+                    sections.append("")
+                    sections.append("------")
+                    sections.append(
+                        "Follow any rules, preferences, or teachings above your prior knowledge."
+                    )
+                    sections.append(f"User: {text}")
+                    prompt = "\n".join(sections)
+
+                model_t0 = _time.perf_counter()
+                response = await call_model(prompt, enable_thinking=False)
+                model_dt = _time.perf_counter() - model_t0
+
+                # Decide extraction (deterministic gate) and run it in the background.
+                will_extract = memory_manager.should_extract(text)
+                if will_extract:
+                    asyncio.create_task(memory_manager.process_chat(intent.id, text, response))
+
+                total_dt = _time.perf_counter() - t_search
+                print(
+                    f"[chat] memory_search={dt_search:.2f}s "
+                    f"chat_generation={model_dt:.2f}s "
+                    f"memory_extraction={'queued' if will_extract else 'skipped'} "
+                    f"total={total_dt:.2f}s",
+                    file=sys.stderr,
+                )
                 intent.metadata = {"model_time": model_dt}
             elif intent.kind == "hybrid":
                 # Hybrid execution pipeline: tools first, then LLM summary
