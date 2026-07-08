@@ -42,80 +42,67 @@ class Orchestrator:
             elif intent.kind == "chat":
                 import time as _time
                 from core.fast_path import handle_fast_path
+                from core.grounded_intelligence import GroundedIntelligence
+                from core.world_manager import observe_world
+                from core.project_context import ProjectContext
+                from core.world import RuntimeState
                 from memory.manager import MemoryManager
+                from core.output_mode import log_verbose, log_debug
 
                 # Try fast path first (greetings, simple queries)
                 fast_response = handle_fast_path(text)
                 if fast_response:
                     response = fast_response
-                    from core.output_mode import log_debug
                     log_debug(f"[orchestrator] fast path: {text[:50]}")
                     intent.metadata = {"fast_path": True}
                 else:
-                    memory_manager = MemoryManager()
+                    t_start = _time.perf_counter()
 
-                    # Retrieve relevant memories
-                    t_search = _time.perf_counter()
-                    memory_results = await asyncio.to_thread(memory_manager.search, text, limit=5)
-                    dt_search = _time.perf_counter() - t_search
+                    # Phase 9: Grounded Intelligence
+                    # Build world context for grounded answers
+                    t_observe = _time.perf_counter()
+                    world = await observe_world(cwd=".", runtime=RuntimeState())
+                    dt_observe = _time.perf_counter() - t_observe
 
-                # Build explicit, typed long-term memory sections.
-                # Episodic memories are run-history JSON and are not injected into chat.
-                # Field names come straight from the retriever (content/type), not the
-                # legacy shim (text/note_source) — a prior mismatch made injection a no-op.
-                SECTION_ORDER = [
-                    ("Teaching", "Teaching (Highest Priority)"),
-                    ("Preference", "Preference"),
-                    ("Knowledge", "Knowledge"),
-                    ("Lesson", "Lessons"),
-                    ("Fact", "Facts"),
-                ]
-                grouped = {t: [] for t, _ in SECTION_ORDER}
-                for r in memory_results:
-                    mtype = r.get("type")
-                    content = r.get("content", "")
-                    if mtype in grouped and content:
-                        grouped[mtype].append(content)
+                    t_project = _time.perf_counter()
+                    project_context = ProjectContext.from_workspace(world.workspace, ".")
+                    dt_project = _time.perf_counter() - t_project
 
-                prompt = text
-                if any(grouped.values()):
-                    sections = ["LONG TERM MEMORY"]
-                    for mtype, header in SECTION_ORDER:
-                        items = grouped[mtype]
-                        if not items:
-                            continue
-                        sections.append("")
-                        sections.append(header)
-                        if mtype == "Teaching":
-                            sections.append("Teaching overrides default model knowledge.")
-                        for c in items:
-                            sections.append(f"- {c}")
-                    sections.append("")
-                    sections.append("------")
-                    sections.append(
-                        "Follow any rules, preferences, or teachings above your prior knowledge."
+                    # Route to truth source and collect evidence
+                    grounded = GroundedIntelligence()
+
+                    t_route = _time.perf_counter()
+                    routing_info = grounded.get_routing_info(text)
+                    dt_route = _time.perf_counter() - t_route
+
+                    log_verbose(
+                        f"[chat] truth_source={routing_info['source']} "
+                        f"confidence={routing_info['confidence']:.2f} "
+                        f"bypass_planner={routing_info['bypass_planner']}"
                     )
-                    sections.append(f"User: {text}")
-                    prompt = "\n".join(sections)
 
-                    model_t0 = _time.perf_counter()
-                    response = await call_model(prompt, enable_thinking=False)
-                    model_dt = _time.perf_counter() - model_t0
+                    # Answer using grounded intelligence
+                    t_answer = _time.perf_counter()
+                    response, decision = await grounded.answer(text, world, project_context)
+                    dt_answer = _time.perf_counter() - t_answer
 
-                    # Decide extraction (deterministic gate) and run it in the background.
+                    # Memory extraction (background)
+                    memory_manager = MemoryManager()
                     will_extract = memory_manager.should_extract(text)
                     if will_extract:
                         asyncio.create_task(memory_manager.process_chat(intent.id, text, response))
 
-                    total_dt = _time.perf_counter() - t_search
-                    from core.output_mode import log_verbose
+                    total_dt = _time.perf_counter() - t_start
                     log_verbose(
-                        f"[chat] memory_search={dt_search:.2f}s "
-                        f"chat_generation={model_dt:.2f}s "
+                        f"[chat] observe={dt_observe:.2f}s project_context={dt_project:.2f}s "
+                        f"route={dt_route:.2f}s answer={dt_answer:.2f}s "
                         f"memory_extraction={'queued' if will_extract else 'skipped'} "
                         f"total={total_dt:.2f}s"
                     )
-                    intent.metadata = {"model_time": model_dt}
+                    intent.metadata = {
+                        "truth_source": decision.source.value,
+                        "grounded": True,
+                    }
             elif intent.kind == "hybrid":
                 # Hybrid execution pipeline: tools first, then LLM summary
                 pipeline_run = PipelineRun(intent=intent)
