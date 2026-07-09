@@ -101,29 +101,40 @@ def build_synthesis_prompt(bundle: EvidenceBundle, query: str) -> str:
     parts = [
         "You are synthesizing an answer from RETRIEVED EVIDENCE only.",
         "",
-        "RULES:",
-        "1. Retrieved evidence is AUTHORITATIVE. Never contradict it.",
+        "RULES (must all hold):",
+        "1. The <evidence> block below is the ONLY permitted source. It is "
+        "AUTHORITATIVE; never contradict it.",
         "2. General knowledge is LOWER priority. If evidence conflicts with your "
         "model priors, TRUST THE EVIDENCE.",
-        "3. Do NOT introduce any fact, memory trace, install record, file state, "
-        "or system state that is not present in the EVIDENCE block below. "
+        "3. Do NOT introduce any fact, memory trace, install record, dependency "
+        "version, file state, or system state that is not present inside <evidence>. "
         "Never fabricate paths, branches, versions, or past events.",
-        "4. If the EVIDENCE does not contain what is needed to answer, state that "
+        "4. Do NOT invent sections such as 'Memory:', 'History:', 'Installs:', or "
+        "'Past attempts' unless that exact content appears inside <evidence>. If "
+        "<evidence> has no memory items, do not write a memory section at all.",
+        "5. If <evidence> does not contain what is needed to answer, state that "
         "plainly (e.g. 'The available evidence does not cover X.') instead of "
         "guessing or filling in from memory.",
+        "6. Every claim in your answer must be traceable to a line inside "
+        "<evidence>. When unsure whether something is in <evidence>, OMIT it. "
+        "Never label invented content as 'from EVIDENCE'.",
         "",
     ]
 
     if evidence_section:
+        parts.append("<evidence>")
         parts.append(evidence_section)
+        parts.append("</evidence>")
         parts.append("")
     else:
+        parts.append("<evidence>")
         parts.append("No evidence was collected.")
+        parts.append("</evidence>")
         parts.append("")
 
     parts.append(f"User request: {query}")
     parts.append("")
-    parts.append("Answer strictly from the EVIDENCE above, following RULES 1-4.")
+    parts.append("Answer strictly from the <evidence> block above, following RULES 1-6.")
 
     return "\n".join(parts)
 
@@ -233,7 +244,26 @@ _DOC_CANDIDATES = [
     ("ARCHITECTURE.md", "architecture"),
     ("SYSTEM_ARCHITECTURE.md", "architecture"),
     ("PHASE10_ARCHITECTURE_DIAGRAM.md", "architecture"),
+    ("DESIGN.md", "architecture"),
+    ("CONTRIBUTING.md", "contributing"),
 ]
+
+
+# Directories that are never part of "understanding" the repo.
+_IGNORE_DIRS = {
+    ".git", "node_modules", "target", "dist", "build", ".venv", "venv",
+    "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+    ".tox", "site-packages", ".idea", ".vscode", "htmlcov", "coverage",
+}
+
+# Project metadata files whose presence reveals language/package manager.
+_METADATA_FILES = [
+    "pyproject.toml", "Cargo.toml", "package.json", "go.mod",
+    "requirements.txt", "uv.lock", "poetry.lock", "Cargo.lock",
+    "setup.py", "setup.cfg", "Gemfile", "pom.xml", "build.gradle",
+]
+
+_METADATA_MAX_BYTES = 4000
 
 
 def collect_document_evidence(cwd: str = ".") -> EvidenceBundle:
@@ -265,3 +295,203 @@ def collect_document_evidence(cwd: str = ".") -> EvidenceBundle:
             )
 
     return bundle
+
+
+def collect_repository_evidence(
+    cwd: str = ".",
+    project_context: "ProjectContext" = None,
+    workspace_state: "WorkspaceState" = None,
+) -> EvidenceBundle:
+    """Lightweight repository snapshot for grounded analysis/summary.
+
+    Builds an OVERVIEW (tree, metadata, entry points, stats) - it does NOT
+    recursively read source. Reuses ProjectContext for derived facts and only
+    reads small, well-known metadata files. Safe to call on any repo.
+    """
+    bundle = EvidenceBundle()
+    base = Path(cwd).resolve()
+
+    if not base.exists():
+        return bundle
+
+    # --- Repository root + current working directory ---
+    repo_root = _find_repo_root(base) or base
+    bundle.add(EvidenceSource.WORKSPACE, "repo_root", str(repo_root), confidence=1.0)
+    bundle.add(EvidenceSource.WORKSPACE, "cwd", str(base), confidence=1.0)
+
+    # --- Top-level directory tree (one level, ignoring build artifacts) ---
+    tree = _top_level_tree(base)
+    if tree:
+        bundle.add(EvidenceSource.WORKSPACE, "top_level_tree", tree, confidence=1.0)
+
+    # --- Project metadata files (language / package manager inference) ---
+    meta = {}
+    for fname in _METADATA_FILES:
+        path = base / fname
+        if path.exists():
+            try:
+                size = path.stat().st_size
+                if size <= _METADATA_MAX_BYTES:
+                    meta[fname] = path.read_text(encoding="utf-8", errors="replace")
+                else:
+                    meta[fname] = f"<{fname}: {size} bytes, too large to inline>"
+            except OSError:
+                continue
+    if meta:
+        bundle.add(EvidenceSource.WORKSPACE, "project_metadata", meta, confidence=1.0)
+
+    # --- Entry points (from ProjectContext if available, else recompute) ---
+    if project_context is not None:
+        entry_points = project_context.entry_points
+        major_components = project_context.major_components
+        if project_context.active_phase:
+            bundle.add(EvidenceSource.WORKSPACE, "active_phase",
+                       project_context.active_phase, confidence=1.0)
+    else:
+        entry_points = _find_entry_points(base)
+        major_components = _find_major_components(base)
+
+    if entry_points:
+        bundle.add(EvidenceSource.WORKSPACE, "entry_points", entry_points, confidence=1.0)
+    if major_components:
+        bundle.add(EvidenceSource.WORKSPACE, "major_components",
+                   major_components, confidence=1.0)
+
+    # --- Lightweight statistics (no recursive file reads) ---
+    stats = _repo_stats(base)
+    bundle.add(EvidenceSource.WORKSPACE, "repo_stats", stats, confidence=1.0)
+
+    # --- Language / package-manager hints from workspace state ---
+    if workspace_state is not None:
+        if workspace_state.project_type:
+            bundle.add(EvidenceSource.WORKSPACE, "project_type",
+                       workspace_state.project_type, confidence=1.0)
+        if workspace_state.languages:
+            bundle.add(EvidenceSource.WORKSPACE, "languages",
+                       workspace_state.languages, confidence=1.0)
+        if workspace_state.package_manager:
+            bundle.add(EvidenceSource.WORKSPACE, "package_manager",
+                       workspace_state.package_manager, confidence=1.0)
+        if workspace_state.build_system:
+            bundle.add(EvidenceSource.WORKSPACE, "build_system",
+                       workspace_state.build_system, confidence=1.0)
+
+    return bundle
+
+
+def _find_repo_root(path: Path) -> Optional[Path]:
+    """Walk up until a .git (or pyproject.toml/Cargo.toml) is found."""
+    for parent in [path, *path.parents]:
+        if (parent / ".git").exists():
+            return parent
+        if (parent / "pyproject.toml").exists() or (parent / "Cargo.toml").exists():
+            return parent
+    return None
+
+
+def _top_level_tree(base: Path, max_entries: int = 60) -> list[str]:
+    """One-level listing of top-level dirs and files, ignoring build artifacts."""
+    entries = []
+    try:
+        for item in sorted(base.iterdir()):
+            if item.name in _IGNORE_DIRS or item.name.startswith("."):
+                continue
+            entries.append(item.name + "/" if item.is_dir() else item.name)
+    except (OSError, PermissionError):
+        return []
+    return entries[:max_entries]
+
+
+def _find_entry_points(base: Path) -> list[str]:
+    """Recompute likely entry points without a full ProjectContext."""
+    candidates = [
+        "main.py", "app.py", "server.py", "index.py", "__main__.py",
+        "main.rs", "lib.rs", "index.js", "index.ts", "app.js",
+        "server.js", "Main.java", "App.java", "main.go", "manage.py", "cli.py",
+    ]
+    found = []
+    for c in candidates:
+        if (base / c).exists():
+            found.append(c)
+    # Also surface a cmd/ or src/ entry if present.
+    for sub in ("cmd", "src"):
+        subp = base / sub
+        if subp.is_dir():
+            found.append(f"{sub}/")
+    return found
+
+
+def _find_major_components(base: Path) -> list[str]:
+    """Top-level code directories (mirrors ProjectContext heuristic)."""
+    components = []
+    try:
+        for item in base.iterdir():
+            if not item.is_dir() or item.name in _IGNORE_DIRS or item.name.startswith("."):
+                continue
+            if any(item.glob("*.py")) or any(item.glob("*.rs")) or \
+               any(item.glob("*.js")) or any(item.glob("*.ts")) or \
+               any(item.glob("*.go")) or any(item.glob("*.java")):
+                components.append(item.name)
+    except (OSError, PermissionError):
+        pass
+    return components[:10]
+
+
+def _repo_stats(base: Path, max_dirs_scan: int = 40) -> dict:
+    """Cheap repo statistics without recursive source loading.
+
+    Counts languages by file extension across the top-level code dirs only,
+    plus total file/dir counts (still bounded - not a full index).
+    """
+    ext_count: dict[str, int] = {}
+    file_total = 0
+    dir_total = 0
+    recent: list[str] = []
+
+    try:
+        for item in base.iterdir():
+            if item.name in _IGNORE_DIRS or item.name.startswith("."):
+                continue
+            if item.is_dir():
+                dir_total += 1
+            else:
+                file_total += 1
+                _count_ext(item, ext_count)
+    except (OSError, PermissionError):
+        pass
+
+    # Scan one level into code dirs only (bounded total) for language signal.
+    scanned = 0
+    for item in base.iterdir():
+        if not item.is_dir() or item.name in _IGNORE_DIRS or item.name.startswith("."):
+            continue
+        if scanned >= max_dirs_scan:
+            break
+        try:
+            for f in item.iterdir():
+                if f.name.startswith("."):
+                    continue
+                if f.is_dir():
+                    dir_total += 1
+                else:
+                    file_total += 1
+                    _count_ext(f, ext_count)
+                scanned += 1
+                if scanned >= 400:  # hard cap on files touched
+                    break
+        except (OSError, PermissionError):
+            continue
+
+    stats = {
+        "top_level_files": file_total,
+        "top_level_dirs": dir_total,
+        "languages_by_ext": dict(sorted(ext_count.items(), key=lambda x: -x[1])),
+    }
+    return stats
+
+
+def _count_ext(path: Path, ext_count: dict) -> None:
+    """Tally a file's extension into the counter."""
+    if path.suffix:
+        ext = path.suffix.lower()
+        ext_count[ext] = ext_count.get(ext, 0) + 1

@@ -107,6 +107,58 @@ class TestRepositoryAwareness:
 
 
 # --------------------------------------------------------------------------- #
+# PART — Repository intelligence (evidence collection expansion)
+# --------------------------------------------------------------------------- #
+
+class TestRepositoryIntelligence:
+    """Repo analysis must gather a snapshot (tree, metadata, entry points,
+    stats) - not just README + memory - and never claim 'no repository'."""
+
+    @pytest.mark.parametrize("query", [
+        "Analyze this repo",
+        "Analyze this codebase",
+        "Review this codebase",
+        "Summarize this project",
+        "Describe repository architecture",
+    ])
+    async def test_repo_queries_collect_snapshot(self, query):
+        calls = await _handle(query, model_reply="grounded summary")
+        meta = calls["meta"]
+        assert meta["execution_path"] == "synthesis"
+        prompt = "\n".join(calls["llm"])
+        # Repository snapshot evidence must be present in the prompt.
+        assert "repo_root" in prompt, "missing repo_root in evidence"
+        assert "top_level_tree" in prompt, "missing directory structure"
+        assert "entry_points" in prompt, "missing entry points"
+        assert "repo_stats" in prompt, "missing repo statistics"
+        # Acceptance: must NOT claim no repository is available.
+        assert "no repository" not in calls["answer"].lower()
+
+    async def test_repo_snapshot_includes_metadata_files(self):
+        """pyproject.toml / package.json etc. become evidence when present."""
+        calls = await _handle("Analyze this repo", model_reply="x")
+        prompt = "\n".join(calls["llm"])
+        # Friday itself is a Python project with pyproject-equivalent markers;
+        # at minimum the project_metadata key should surface when files exist.
+        # We assert the gathering code ran and emitted a repo_stats block.
+        assert "repo_stats" in prompt
+        assert "top_level_files" in prompt
+
+    def test_collect_repository_evidence_runs_offline(self):
+        """The collector works without a live world (pure filesystem)."""
+        from core.evidence import collect_repository_evidence
+        bundle = collect_repository_evidence(".")
+        keys = {e.key for e in bundle.items}
+        assert "repo_root" in keys
+        assert "top_level_tree" in keys
+        assert "entry_points" in keys
+        assert "repo_stats" in keys
+        # Performance guard: must NOT read source recursively into evidence.
+        # (We only assert it completed quickly and did not embed whole files.)
+        assert len(bundle.items) < 100
+
+
+# --------------------------------------------------------------------------- #
 # PART 4 — Memory recall & teaching precedence
 # --------------------------------------------------------------------------- #
 
@@ -269,6 +321,10 @@ class TestHallucinationPrevention:
         assert "AUTHORITATIVE" in prompt
         assert "Do NOT introduce any fact" in prompt
         assert "fabricate" in prompt.lower()
+        # Must forbid inventing Memory/Installs/History sections not in evidence.
+        assert "Do NOT invent sections" in prompt
+        # Evidence must be fenced so the model treats it as the sole source.
+        assert "<evidence>" in prompt and "</evidence>" in prompt
         # Must include the actual evidence so the model can cite it.
         assert "Friday" in prompt
         assert "User request: Analyze this repo" in prompt

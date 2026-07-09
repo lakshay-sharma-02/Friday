@@ -1,11 +1,15 @@
 """Friday: boots the event bus, orchestrator, autonomous triggers, and CLI interface."""
 
 import sys
+import os
 import asyncio
 from core import EventBus, Orchestrator
 from core.model_client import close_client
 from interfaces import run_cli
 from triggers import start_scheduler, start_fs_watch
+
+# Enable request tracing if FRIDAY_TRACE environment variable is set
+ENABLE_TRACING = os.getenv("FRIDAY_TRACE", "0") == "1"
 
 
 async def main():

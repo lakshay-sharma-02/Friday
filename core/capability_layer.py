@@ -199,6 +199,7 @@ class CapabilityLayer:
             collect_git_evidence,
             collect_system_evidence,
             collect_document_evidence,
+            collect_repository_evidence,
             collect_memory_evidence,
             build_synthesis_prompt,
         )
@@ -218,6 +219,10 @@ class CapabilityLayer:
         bundle.items.extend(collect_git_evidence(world).items)
         bundle.items.extend(collect_system_evidence(world).items)
         bundle.items.extend(collect_document_evidence(".").items)
+        # Repository snapshot: tree, metadata, entry points, stats (no full read).
+        bundle.items.extend(
+            collect_repository_evidence(".", project_context, world.workspace).items
+        )
 
         memory_manager = MemoryManager()
         try:

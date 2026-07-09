@@ -1,0 +1,173 @@
+{
+  "trace_id": "20260709_133051_197526",
+  "timestamp": "2026-07-09T13:30:51.197590",
+  "original_prompt": "analyze this repository",
+  "intent_classification": "analyze repository",
+  "capability_selected": "repository_analysis",
+  "operation_selected": "ANALYZE",
+  "capability_confidence": 0.95,
+  "evidence": [
+    {
+      "type": "workspace",
+      "origin": "project_type",
+      "size": 6,
+      "summary": "Python",
+      "confidence": 1.0,
+      "metadata": {}
+    },
+    {
+      "type": "workspace",
+      "origin": "languages",
+      "size": 10,
+      "summary": "['Python']",
+      "confidence": 1.0,
+      "metadata": {}
+    },
+    {
+      "type": "git",
+      "origin": "branch",
+      "size": 4,
+      "summary": "main",
+      "confidence": 1.0,
+      "metadata": {}
+    },
+    {
+      "type": "git",
+      "origin": "status",
+      "size": 5,
+      "summary": "dirty",
+      "confidence": 1.0,
+      "metadata": {}
+    }
+  ],
+  "memories_retrieved": [
+    {
+      "memory_id": "run_123",
+      "memory_type": "runs",
+      "similarity_score": 0.87,
+      "ranking_score": 0.9,
+      "importance": 0.8,
+      "project_relevance": 0.85,
+      "content_preview": "Previous repository analysis completed successfully",
+      "selected": true,
+      "rejection_reason": null
+    },
+    {
+      "memory_id": "note_456",
+      "memory_type": "notes",
+      "similarity_score": 0.3,
+      "ranking_score": 0.2,
+      "importance": 0.4,
+      "project_relevance": 0.1,
+      "content_preview": "Unrelated note about something else",
+      "selected": false,
+      "rejection_reason": "low relevance"
+    }
+  ],
+  "memories_selected": [
+    {
+      "memory_id": "run_123",
+      "memory_type": "runs",
+      "similarity_score": 0.87,
+      "ranking_score": 0.9,
+      "importance": 0.8,
+      "project_relevance": 0.85,
+      "content_preview": "Previous repository analysis completed successfully",
+      "selected": true,
+      "rejection_reason": null
+    }
+  ],
+  "memories_rejected": [
+    {
+      "memory_id": "note_456",
+      "memory_type": "notes",
+      "similarity_score": 0.3,
+      "ranking_score": 0.2,
+      "importance": 0.4,
+      "project_relevance": 0.1,
+      "content_preview": "Unrelated note about something else",
+      "selected": false,
+      "rejection_reason": "low relevance"
+    }
+  ],
+  "workspace_snapshot": {},
+  "project_metadata": {},
+  "git_metadata": {},
+  "repository_snapshot": {},
+  "documents_loaded": [],
+  "prompt_trace": {
+    "system_prompt": "You are Friday, an AI assistant analyzing repositories.",
+    "evidence_block": "\n    EVIDENCE\n\n    Workspace:\n      project_type: Python\n      languages: Python\n\n    Git:\n      branch: main\n      status: dirty\n    ",
+    "user_prompt": "Analyze this repository and provide insights.",
+    "final_payload": "SYSTEM:\nYou are Friday, an AI assistant analyzing repositories.\n\nEVIDENCE:\n\n    EVIDENCE\n\n    Workspace:\n      project_type: Python\n      languages: Python\n\n    Git:\n      branch: main\n      status: dirty\n    \n\nUSER:\nAnalyze this repository and provide insights.",
+    "token_count_estimate": 65
+  },
+  "model_response": {
+    "raw_output": "This is a Python project on the main branch with uncommitted changes.",
+    "parsed_output": null,
+    "reasoning_metadata": {},
+    "input_tokens": 150,
+    "output_tokens": 50,
+    "latency_seconds": 1.23
+  },
+  "stages": [
+    {
+      "stage": "capability_routing",
+      "start_time": 6818.522989487,
+      "end_time": 6818.523069249,
+      "duration_seconds": 7.976200049597537e-05,
+      "input_data": {
+        "query": "analyze this repository"
+      },
+      "output_data": {
+        "capability": "repository_analysis",
+        "operation": "ANALYZE",
+        "confidence": 0.95,
+        "intent": "analyze repository"
+      },
+      "errors": []
+    },
+    {
+      "stage": "memory_search",
+      "start_time": 6818.523080075,
+      "end_time": 6818.523123099,
+      "duration_seconds": 4.302400066080736e-05,
+      "input_data": {},
+      "output_data": {
+        "memories_found": 2,
+        "memories_selected": 1
+      },
+      "errors": []
+    },
+    {
+      "stage": "evidence_collection",
+      "start_time": 6818.523132109,
+      "end_time": 6818.523179323,
+      "duration_seconds": 4.721400000562426e-05,
+      "input_data": {},
+      "output_data": {
+        "evidence_items": 4
+      },
+      "errors": []
+    },
+    {
+      "stage": "llm_call",
+      "start_time": 6818.523186587,
+      "end_time": 6818.523249097,
+      "duration_seconds": 6.25100001343526e-05,
+      "input_data": {},
+      "output_data": {
+        "response_length": 80
+      },
+      "errors": []
+    }
+  ],
+  "total_latency_seconds": 0.0002773509995677159,
+  "success": true,
+  "error_message": null,
+  "contains_conversation_history": false,
+  "contains_previous_tasks": false,
+  "contains_planner_output": false,
+  "contains_unintended_memory": false,
+  "contamination_sources": []
+}
