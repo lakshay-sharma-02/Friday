@@ -73,7 +73,7 @@ def _get_type_weight(mem_type: str) -> float:
 def _get_recency_score(created_at: str) -> float:
     try:
         dt = datetime.datetime.fromisoformat(created_at)
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.UTC)
         age_days = (now - dt).total_seconds() / (24 * 3600)
         # Decay: 1.0 for now, 0.5 for 30 days old, asymptote at 0
         return 1.0 / (1.0 + age_days / 30.0)

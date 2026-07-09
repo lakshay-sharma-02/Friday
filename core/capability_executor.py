@@ -249,8 +249,8 @@ class CapabilityExecutor:
         """Execute knowledge capability (conceptual questions via LLM)."""
         from core.model_client import call_model
 
-        # Direct LLM call for conceptual knowledge
-        answer = await call_model(query, enable_thinking=False, stream_to_stdout=False)
+        # Direct LLM call for conceptual knowledge - stream to stdout
+        answer = await call_model(query, enable_thinking=False, stream_to_stdout=True)
 
         return CapabilityResult(
             success=True,

@@ -5,7 +5,7 @@ import os
 import asyncio
 from core import EventBus, Orchestrator
 from core.model_client import close_client
-from interfaces import run_cli
+from interfaces import run_cli, run_oneshot
 from triggers import start_scheduler, start_fs_watch
 
 # Enable request tracing if FRIDAY_TRACE environment variable is set
@@ -13,7 +13,7 @@ ENABLE_TRACING = os.getenv("FRIDAY_TRACE", "0") == "1"
 
 
 async def main():
-    """Start Friday's core components and run the CLI."""
+    """Start Friday's core components and run the CLI or one-shot command."""
     from core.output_mode import log_debug, should_show_verbose
     from memory import initialize_memory_subsystem
 
@@ -33,7 +33,19 @@ async def main():
     # Start the orchestrator in the background
     orchestrator_task = asyncio.create_task(orchestrator.run())
 
-    # Start autonomous triggers in the background
+    # Check if one-shot command provided
+    if len(sys.argv) > 1:
+        command = " ".join(sys.argv[1:])
+        try:
+            await run_oneshot(bus, command)
+        finally:
+            orchestrator_task.cancel()
+            await close_client()
+            from memory import get_worker
+            get_worker().stop()
+        return
+
+    # Start autonomous triggers in the background for interactive mode
     scheduler_task = asyncio.create_task(start_scheduler(bus))
     fs_watch_task = asyncio.create_task(start_fs_watch(bus, watch_path=".", pattern="Cargo.toml"))
 
@@ -58,7 +70,7 @@ async def main():
         except asyncio.CancelledError:
             pass
         await close_client()
-        
+
         from memory import get_worker
         get_worker().stop()
 

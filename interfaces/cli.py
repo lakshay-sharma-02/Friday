@@ -118,6 +118,13 @@ async def run_cli(bus: EventBus) -> None:
                 print(f"\n{response}")
                 print(f"[{total_dt:.2f}s]")
             else:
+                # Chat intent - check if response was already streamed
+                # If response is not empty and wasn't streamed (instant answers), print it
+                if response and response.strip():
+                    # Check if this was an instant answer (no LLM call)
+                    if not intent.metadata.get("used_llm", True):
+                        print(response)
+
                 # Show timing breakdown if available (chat path)
                 model_time = intent.metadata.get("model_time") if hasattr(intent, "metadata") and intent.metadata else None
                 if model_time is not None:

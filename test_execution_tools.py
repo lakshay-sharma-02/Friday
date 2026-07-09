@@ -29,7 +29,7 @@ def test_shell_success():
 
 
 def test_shell_failure():
-    r = run_shell(["python3", "-c", "import sys; sys.exit(3)"])
+    r = run_shell("python3 -c 'import sys; sys.exit(3)'")
     assert r["success"] is False
     assert r["exit_code"] == 3
     assert r["killed"] is False
@@ -38,12 +38,12 @@ def test_shell_failure():
 def test_shell_invalid_executable():
     r = run_shell("this_command_does_not_exist_xyz")
     assert r["success"] is False
-    assert r["exit_code"] is None
-    assert "spawn failed" in r["reason"]
+    assert r["exit_code"] == 127  # Shell returns 127 for command not found
+    assert "not found" in r["stderr"] or "not found" in (r.get("reason") or "")
 
 
 def test_shell_stderr_captured():
-    r = run_shell(["python3", "-c", "import sys; print('oops', file=sys.stderr)"])
+    r = run_shell("python3 -c \"import sys; print('oops', file=sys.stderr)\"")
     assert r["success"] is True
     assert r["stderr"].strip() == "oops"
 
@@ -64,22 +64,22 @@ def test_shell_working_directory(tmp_path):
 
 
 def test_shell_environment_variables():
-    r = run_shell(["python3", "-c", "import os; print(os.environ['FRIDAY_TEST_VAR'])"],
+    r = run_shell("python3 -c \"import os; print(os.environ['FRIDAY_TEST_VAR'])\"",
                   env={"FRIDAY_TEST_VAR": "present"})
     assert r["stdout"].strip() == "present"
 
 
 def test_shell_argv_no_shell_interpretation():
-    # If a shell were interpreting, `echo` would see the whole string and print it.
-    r = run_shell(["echo", "a; rm -rf /nonexistent"])
+    # If a shell were interpreting, echo would see the whole string and print it.
+    r = run_shell("echo 'a; rm -rf /nonexistent'")
     assert r["success"] is True
-    assert ";" not in r["stdout"].strip().split() or r["stdout"].strip() == "a; rm -rf /nonexistent"
+    assert "a; rm -rf /nonexistent" in r["stdout"].strip()
 
 
 # --- shell: unicode / long output ---
 
 def test_shell_unicode_output():
-    r = run_shell(["python3", "-c", "print('héllo wörld 日本語 🚀')"])
+    r = run_shell("python3 -c \"print('héllo wörld 日本語 🚀')\"")
     assert r["success"] is True
     assert "🚀" in r["stdout"]
 

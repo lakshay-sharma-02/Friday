@@ -316,9 +316,11 @@ class CapabilityRegistry:
             keywords=["remember", "taught", "teach", "preference", "recall",
                       "what do i prefer", "what do you remember", "what did i teach you",
                       "what do i usually use", "what have i told you", "remembered preferences",
-                      "what did you learn", "do you recall"],
+                      "what did you learn", "do you recall", "what's my name", "what is my name",
+                      "my name", "my full name", "who am i"],
             synonyms=["my name", "what did i", "do you remember", "what i prefer",
-                      "my preferences", "what i taught", "things i taught", "what i told you"],
+                      "my preferences", "my identity", "what i taught", "things i taught",
+                      "what i told you", "what's my", "who is"],
             supported_operations={Operation.RECALL, Operation.REMEMBER, Operation.REFLECT, Operation.ADVISE}
         ))
 

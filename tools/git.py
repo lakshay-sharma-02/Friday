@@ -14,7 +14,12 @@ GIT_TIMEOUT = 30
 
 def _git(args, cwd=None, timeout=GIT_TIMEOUT) -> dict:
     """Run a git command via the shared execution layer. Never raises."""
-    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+    import shlex
+    if isinstance(args, list):
+        cmd = "git " + " ".join(shlex.quote(str(arg)) for arg in args)
+    else:
+        cmd = f"git {args}"
+    result = run_shell(cmd, cwd=cwd, timeout=timeout)
     exit_code = result.get("exit_code")
     stderr = result.get("stderr", "") or ""
     output = (result.get("stdout", "") or "").strip()

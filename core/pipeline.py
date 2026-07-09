@@ -16,6 +16,23 @@ from agents.planner import create_plan
 VERBOSE_PIPELINE = os.getenv("VERBOSE_PIPELINE") == "1"
 
 
+def _reflect_on_execution(run: PipelineRun, world: WorldState, timings: dict) -> None:
+    """Phase 12: Engineering Reflection - identify improvement opportunities."""
+    from core.reflection import EngineeringReflection
+    from core.backlog import EngineeringBacklog
+
+    reflection = EngineeringReflection()
+    issue = reflection.reflect(run, world, timings)
+
+    if issue:
+        backlog = EngineeringBacklog()
+        task = backlog.record_issue(issue)
+        if task.occurrences == 1:
+            print(f"[reflection] identified issue: {issue.layer} - {issue.reason}", file=sys.stderr)
+        else:
+            print(f"[reflection] recurring issue (x{task.occurrences}): {issue.layer} - {issue.reason}", file=sys.stderr)
+
+
 def _build_retry_context(run: PipelineRun) -> str:
     """Build context string for retry attempt from failed execution."""
     failures = [entry for entry in run.execution_log if not entry["success"]]
@@ -210,7 +227,20 @@ async def run_pipeline(run: PipelineRun) -> str:
             await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
             t_process = time.perf_counter() - t_process_start
 
-            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s", file=sys.stderr)
+            # Phase 12: Engineering Reflection
+            t_reflect_start = time.perf_counter()
+            _reflect_on_execution(run, run.world, {
+                "observe": t_observe,
+                "health": t_health,
+                "memory_search": t_memory_search,
+                "plan": t_plan,
+                "validate": t_validate,
+                "execute": t_execute,
+                "process": t_process
+            })
+            t_reflect = time.perf_counter() - t_reflect_start
+
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s reflect={t_reflect:.2f}s", file=sys.stderr)
             return f"Task completed successfully after {len(run.execution_log)} step(s)."
 
         if run.retry_count >= run.max_retries:
@@ -222,7 +252,20 @@ async def run_pipeline(run: PipelineRun) -> str:
             await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
             t_process = time.perf_counter() - t_process_start
 
-            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s", file=sys.stderr)
+            # Phase 12: Engineering Reflection
+            t_reflect_start = time.perf_counter()
+            _reflect_on_execution(run, run.world, {
+                "observe": t_observe,
+                "health": t_health,
+                "memory_search": t_memory_search,
+                "plan": t_plan,
+                "validate": t_validate,
+                "execute": t_execute,
+                "process": t_process
+            })
+            t_reflect = time.perf_counter() - t_reflect_start
+
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s reflect={t_reflect:.2f}s", file=sys.stderr)
             return f"Task failed after {run.retry_count + 1} attempt(s). {len(failures)} step(s) failed."
 
         run.retry_count += 1
@@ -235,5 +278,16 @@ async def run_pipeline(run: PipelineRun) -> str:
     await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
     t_process = time.perf_counter() - t_process_start
 
-    print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s process={t_process:.2f}s", file=sys.stderr)
+    # Phase 12: Engineering Reflection
+    t_reflect_start = time.perf_counter()
+    _reflect_on_execution(run, run.world, {
+        "observe": t_observe,
+        "health": t_health,
+        "memory_search": t_memory_search,
+        "plan": t_plan,
+        "process": t_process
+    })
+    t_reflect = time.perf_counter() - t_reflect_start
+
+    print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s process={t_process:.2f}s reflect={t_reflect:.2f}s", file=sys.stderr)
     return "Task failed - exceeded maximum retries."

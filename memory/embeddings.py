@@ -68,7 +68,7 @@ class EmbeddingIndex:
         vector = vectors[0]
         blob = self._serialize(vector)
         
-        now = datetime.datetime.utcnow().isoformat()
+        now = datetime.datetime.now(datetime.UTC).isoformat()
         
         try:
             # Upsert

@@ -1,0 +1,1091 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.6, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python
+cachedir: .pytest_cache
+rootdir: /home/lakshay/Projects/Friday
+configfile: pytest.ini
+plugins: anyio-4.13.0, asyncio-1.4.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 287 items
+
+test_direct_shell_kill.py::test_direct_shell_kill PASSED                 [  0%]
+test_e2e_phase4.py::test_e2e_integration PASSED                          [  0%]
+test_e2e_phase5.py::test_complete_e2e PASSED                             [  1%]
+test_execution_tools.py::test_shell_success PASSED                       [  1%]
+test_execution_tools.py::test_shell_failure FAILED                       [  1%]
+test_execution_tools.py::test_shell_invalid_executable FAILED            [  2%]
+test_execution_tools.py::test_shell_stderr_captured FAILED               [  2%]
+test_execution_tools.py::test_shell_working_directory PASSED             [  2%]
+test_execution_tools.py::test_shell_environment_variables FAILED         [  3%]
+test_execution_tools.py::test_shell_argv_no_shell_interpretation FAILED  [  3%]
+test_execution_tools.py::test_shell_unicode_output FAILED                [  3%]
+test_execution_tools.py::test_shell_long_output PASSED                   [  4%]
+test_execution_tools.py::test_shell_timeout PASSED                       [  4%]
+test_execution_tools.py::test_shell_cancellation PASSED                  [  4%]
+test_execution_tools.py::test_shell_no_zombie_after_timeout PASSED       [  5%]
+test_execution_tools.py::test_python_inline_script PASSED                [  5%]
+test_execution_tools.py::test_python_file PASSED                         [  5%]
+test_execution_tools.py::test_python_failure PASSED                      [  6%]
+test_execution_tools.py::test_python_no_special_logic PASSED             [  6%]
+test_execution_tools.py::test_process_list_and_terminate PASSED          [  6%]
+test_execution_tools.py::test_process_terminate_unknown_pid PASSED       [  7%]
+test_execution_tools.py::test_process_inspect_unknown_pid PASSED         [  7%]
+test_execution_tools.py::test_process_unknown_action PASSED              [  8%]
+test_execution_tools.py::test_process_graceful_before_force PASSED       [  8%]
+test_git_tools.py::test_status_clean FAILED                              [  8%]
+test_git_tools.py::test_status_dirty FAILED                              [  9%]
+test_git_tools.py::test_status_not_a_repo FAILED                         [  9%]
+test_git_tools.py::test_diff_working_tree FAILED                         [  9%]
+test_git_tools.py::test_diff_staged FAILED                               [ 10%]
+test_git_tools.py::test_diff_file_specific FAILED                        [ 10%]
+test_git_tools.py::test_add_single FAILED                                [ 10%]
+test_git_tools.py::test_add_multiple FAILED                              [ 11%]
+test_git_tools.py::test_add_all FAILED                                   [ 11%]
+test_git_tools.py::test_commit_success FAILED                            [ 11%]
+test_git_tools.py::test_commit_empty_rejected FAILED                     [ 12%]
+test_git_tools.py::test_commit_requires_message PASSED                   [ 12%]
+test_git_tools.py::test_log_default FAILED                               [ 12%]
+test_git_tools.py::test_log_oneline FAILED                               [ 13%]
+test_git_tools.py::test_log_limit FAILED                                 [ 13%]
+test_git_tools.py::test_branch_list FAILED                               [ 13%]
+test_git_tools.py::test_branch_create FAILED                             [ 14%]
+test_git_tools.py::test_branch_delete_requires_confirm FAILED            [ 14%]
+test_git_tools.py::test_branch_rename FAILED                             [ 14%]
+test_git_tools.py::test_checkout_create_branch FAILED                    [ 15%]
+test_git_tools.py::test_checkout_existing FAILED                         [ 15%]
+test_git_tools.py::test_checkout_dirty_requires_confirm FAILED           [ 16%]
+test_git_tools.py::test_detached_head FAILED                             [ 16%]
+test_git_tools.py::test_restore_preview FAILED                           [ 16%]
+test_git_tools.py::test_restore_requires_confirm PASSED                  [ 17%]
+test_git_tools.py::test_restore_working_tree FAILED                      [ 17%]
+test_git_tools.py::test_restore_staged FAILED                            [ 17%]
+test_git_tools.py::test_reset_soft FAILED                                [ 18%]
+test_git_tools.py::test_reset_mixed FAILED                               [ 18%]
+test_git_tools.py::test_reset_requires_confirm PASSED                    [ 18%]
+test_git_tools.py::test_reset_hard_rejected PASSED                       [ 19%]
+test_git_tools.py::test_clone FAILED                                     [ 19%]
+test_git_tools.py::test_clone_invalid_url FAILED                         [ 19%]
+test_http_tools.py::test_http_get PASSED                                 [ 20%]
+test_http_tools.py::test_http_get_query PASSED                           [ 20%]
+test_http_tools.py::test_http_get_binary PASSED                          [ 20%]
+test_http_tools.py::test_http_get_404 PASSED                             [ 21%]
+test_http_tools.py::test_http_timeout PASSED                             [ 21%]
+test_http_tools.py::test_invalid_url PASSED                              [ 21%]
+test_http_tools.py::test_http_post_json PASSED                           [ 22%]
+test_http_tools.py::test_http_put PASSED                                 [ 22%]
+test_http_tools.py::test_http_delete PASSED                              [ 22%]
+test_http_tools.py::test_download_file PASSED                            [ 23%]
+test_http_tools.py::test_download_file_max_size PASSED                   [ 23%]
+test_http_tools.py::test_download_file_no_overwrite PASSED               [ 24%]
+test_http_tools.py::test_upload_file PASSED                              [ 24%]
+test_http_tools.py::test_upload_file_raw PASSED                          [ 24%]
+test_hybrid_error.py::test_hybrid_pipeline_crash_handling[asyncio] FAILED [ 25%]
+test_hybrid_error.py::test_hybrid_tool_failure_handling[asyncio] FAILED  [ 25%]
+test_integration_memory.py::test_real_pipeline_with_memory PASSED        [ 25%]
+test_integration_phase4.py::test_integration FAILED                      [ 26%]
+test_kill_detailed.py::test_kill_with_ps_capture PASSED                  [ 26%]
+test_kill_process.py::test_kill_running_process PASSED                   [ 26%]
+test_p5_acceptance.py::test_acceptance PASSED                            [ 27%]
+test_phase10_5_operations.py::TestOperationSemantics::test_advise_never_executes PASSED [ 27%]
+test_phase10_5_operations.py::TestOperationSemantics::test_execute_requires_planner PASSED [ 27%]
+test_phase10_5_operations.py::TestOperationSemantics::test_read_never_executes PASSED [ 28%]
+test_phase10_5_operations.py::TestOperationSemantics::test_show_command_is_advise PASSED [ 28%]
+test_phase10_5_operations.py::TestOperationSemantics::test_explain_never_executes PASSED [ 28%]
+test_phase10_5_operations.py::TestOperationMatrix::test_operation_classification_accuracy PASSED [ 29%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_current_ram PASSED [ 29%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_current_project PASSED [ 29%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_where_is_file PASSED [ 30%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_git_branch PASSED [ 30%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_read_readme PASSED [ 31%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_explain_rust_ownership PASSED [ 31%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_review_repository PASSED [ 31%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_what_phase PASSED [ 32%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_what_did_i_teach PASSED [ 32%]
+test_phase10_acceptance.py::TestAcceptanceCriteria::test_acceptance_how_to_install PASSED [ 32%]
+test_phase10_acceptance.py::TestCapabilityOwnership::test_system_state_never_uses_shell PASSED [ 33%]
+test_phase10_acceptance.py::TestCapabilityOwnership::test_workspace_never_uses_llm PASSED [ 33%]
+test_phase10_acceptance.py::TestCapabilityOwnership::test_git_state_from_world_state PASSED [ 33%]
+test_phase10_acceptance.py::TestCapabilityOwnership::test_filesystem_uses_tools PASSED [ 34%]
+test_phase10_acceptance.py::TestMultiCapabilityFusion::test_hybrid_query_routing PASSED [ 34%]
+test_phase10_acceptance.py::TestMultiCapabilityFusion::test_summarize_project PASSED [ 34%]
+test_phase10_acceptance.py::TestPlannerIntegration::test_no_planner_for_simple_queries PASSED [ 35%]
+test_phase10_acceptance.py::TestPlannerIntegration::test_planner_for_complex_tasks PASSED [ 35%]
+test_phase10_acceptance.py::TestEvidenceFlow::test_system_state_produces_evidence PASSED [ 35%]
+test_phase10_acceptance.py::TestEvidenceFlow::test_llm_knowledge_no_evidence PASSED [ 36%]
+test_phase10_acceptance.py::TestCapabilityMatrix::test_all_capabilities_have_owner PASSED [ 36%]
+test_phase10_acceptance.py::TestCapabilityMatrix::test_all_capabilities_have_keywords PASSED [ 36%]
+test_phase10_acceptance.py::TestCapabilityMatrix::test_latency_categories_assigned PASSED [ 37%]
+test_phase10_benchmark.py::TestCapabilityRouting::test_routing_latency PASSED [ 37%]
+test_phase10_benchmark.py::TestCapabilityRouting::test_routing_accuracy PASSED [ 37%]
+test_phase10_benchmark.py::TestCapabilityExecution::test_system_state_latency PASSED [ 38%]
+test_phase10_benchmark.py::TestCapabilityExecution::test_workspace_query_latency PASSED [ 38%]
+test_phase10_benchmark.py::TestEndToEndPerformance::test_capability_count PASSED [ 39%]
+test_phase10_benchmark.py::TestEndToEndPerformance::test_ownership_coverage PASSED [ 39%]
+test_phase10_capability_layer.py::TestCapabilityRegistry::test_registry_initialized PASSED [ 39%]
+test_phase10_capability_layer.py::TestCapabilityRegistry::test_find_by_keywords PASSED [ 40%]
+test_phase10_capability_layer.py::TestCapabilityRegistry::test_get_by_category PASSED [ 40%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_route_system_queries PASSED [ 40%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_route_workspace_queries PASSED [ 41%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_route_git_queries PASSED [ 41%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_route_memory_queries PASSED [ 41%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_route_knowledge_queries PASSED [ 42%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_execution_strategy PASSED [ 42%]
+test_phase10_capability_layer.py::TestCapabilityRouter::test_prefers_instant_over_slow PASSED [ 42%]
+test_phase10_capability_layer.py::TestCapabilityExecutor::test_execute_system_state PASSED [ 43%]
+test_phase10_capability_layer.py::TestCapabilityExecutor::test_execute_workspace PASSED [ 43%]
+test_phase10_capability_layer.py::TestCapabilityExecutor::test_execute_git PASSED [ 43%]
+test_phase10_capability_layer.py::TestCapabilityLayer::test_handle_direct_query PASSED [ 44%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_system_state_routing PASSED [ 44%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_workspace_routing PASSED [ 44%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_git_routing PASSED [ 45%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_memory_routing PASSED [ 45%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_filesystem_routing PASSED [ 45%]
+test_phase10_integration.py::TestCapabilityLayerIntegration::test_knowledge_routing PASSED [ 46%]
+test_phase12_reflection.py::test_reflection_no_issue_on_success PASSED   [ 46%]
+test_phase12_reflection.py::test_reflection_detects_failure PASSED       [ 47%]
+test_phase12_reflection.py::test_reflection_detects_slow_memory PASSED   [ 47%]
+test_phase12_reflection.py::test_reflection_detects_slow_planning PASSED [ 47%]
+test_phase12_reflection.py::test_backlog_records_new_issue PASSED        [ 48%]
+test_phase12_reflection.py::test_backlog_merges_duplicate_issues PASSED  [ 48%]
+test_phase12_reflection.py::test_backlog_prioritizes_by_impact_and_frequency PASSED [ 48%]
+test_phase12_reflection.py::test_backlog_persistence PASSED              [ 49%]
+test_phase12_reflection.py::test_backlog_resolve_task PASSED             [ 49%]
+test_phase12_reflection.py::test_backlog_summary_empty PASSED            [ 49%]
+test_phase12_reflection.py::test_backlog_summary_with_tasks PASSED       [ 50%]
+test_phase13_intelligence.py::test_issue_classifier_memory PASSED        [ 50%]
+test_phase13_intelligence.py::test_issue_classifier_planner_performance PASSED [ 50%]
+test_phase13_intelligence.py::test_issue_classifier_executor_failure PASSED [ 51%]
+test_phase13_intelligence.py::test_root_cause_memory_slow_search PASSED  [ 51%]
+test_phase13_intelligence.py::test_root_cause_planner_retry PASSED       [ 51%]
+test_phase13_intelligence.py::test_root_cause_executor_failure PASSED    [ 52%]
+test_phase13_intelligence.py::test_priority_engine_high_impact PASSED    [ 52%]
+test_phase13_intelligence.py::test_priority_engine_frequency_bonus PASSED [ 52%]
+test_phase13_intelligence.py::test_priority_engine_escalation PASSED     [ 53%]
+test_phase13_intelligence.py::test_backlog_records_with_diagnostics PASSED [ 53%]
+test_phase13_intelligence.py::test_insights_biggest_problem PASSED       [ 54%]
+test_phase13_intelligence.py::test_insights_frequent_failures PASSED     [ 54%]
+test_phase13_intelligence.py::test_insights_performance_bottlenecks PASSED [ 54%]
+test_phase13_intelligence.py::test_insights_regression_hotspots PASSED   [ 55%]
+test_phase13_intelligence.py::test_insights_category_breakdown PASSED    [ 55%]
+test_phase13_intelligence.py::test_insights_statistics PASSED            [ 55%]
+test_phase3_complete.py::test_phase3_complete FAILED                     [ 56%]
+test_phase4.py::test_world_state_structure PASSED                        [ 56%]
+test_phase4.py::test_process_observer PASSED                             [ 56%]
+test_phase4.py::test_health_monitor PASSED                               [ 57%]
+test_phase4.py::test_observation_events PASSED                           [ 57%]
+test_phase4.py::test_rule_engine PASSED                                  [ 57%]
+test_phase4.py::test_watchdog PASSED                                     [ 58%]
+test_phase4.py::test_world_manager PASSED                                [ 58%]
+test_phase4.py::test_partial_refresh PASSED                              [ 58%]
+test_phase4.py::test_runtime_state PASSED                                [ 59%]
+test_phase4.py::test_planner_context FAILED                              [ 59%]
+test_phase4_wired.py::test_phase4_integration FAILED                     [ 59%]
+test_phase5_memory.py::test_1_run_two_tasks PASSED                       [ 60%]
+test_phase5_memory.py::test_2_semantic_similarity PASSED                 [ 60%]
+test_phase5_memory.py::test_3_crash_durability PASSED                    [ 60%]
+test_phase5_memory.py::test_4_tier_aging PASSED                          [ 61%]
+test_phase5_memory.py::test_5_explicit_teaching PASSED                   [ 61%]
+test_phase5_memory.py::test_6_taught_note_retrieval PASSED               [ 62%]
+test_phase5_memory.py::test_7_lesson_extraction PASSED                   [ 62%]
+test_phase5_memory.py::test_8_no_spurious_lesson PASSED                  [ 62%]
+test_phase6.py::test_1_scheduler_fire_now PASSED                         [ 63%]
+test_phase6.py::test_2_permission_ceiling_blocks PASSED                  [ 63%]
+test_phase6.py::test_3_fs_watch_trigger PASSED                           [ 63%]
+test_phase6.py::test_4_debounce PASSED                                   [ 64%]
+test_phase6.py::test_5_memory_source_tracking PASSED                     [ 64%]
+test_phase6_complete.py::test_request ERROR                              [ 64%]
+test_phase6_final.py::test_1 PASSED                                      [ 65%]
+test_phase6_final.py::test_2 PASSED                                      [ 65%]
+test_phase6_final.py::test_3 PASSED                                      [ 65%]
+test_phase6_final.py::test_4 PASSED                                      [ 66%]
+test_phase6_final.py::test_5 PASSED                                      [ 66%]
+test_phase6a5_router.py::test_router_chat PASSED                         [ 66%]
+test_phase6a5_router.py::test_router_task PASSED                         [ 67%]
+test_phase6a5_router.py::test_router_hybrid PASSED                       [ 67%]
+test_phase6a5_router.py::test_router_compatibility PASSED                [ 67%]
+test_phase6a5_router.py::test_router_ambiguous_task_explain PASSED       [ 68%]
+test_phase6a_fs_tools.py::test_write_and_read_file PASSED                [ 68%]
+test_phase6a_fs_tools.py::test_write_file_no_overwrite PASSED            [ 68%]
+test_phase6a_fs_tools.py::test_list_directory PASSED                     [ 69%]
+test_phase6a_fs_tools.py::test_search_files PASSED                       [ 69%]
+test_phase6a_fs_tools.py::test_replace_in_file PASSED                    [ 70%]
+test_phase6a_fs_tools.py::test_diff_files PASSED                         [ 70%]
+test_phase6f_planner.py::test_planner_tool_selection[Read README.md-read_file] PASSED [ 70%]
+test_phase6f_planner.py::test_planner_tool_selection[Search TODO-search_files] PASSED [ 71%]
+test_phase6f_planner.py::test_planner_tool_selection[git status-git_status] PASSED [ 71%]
+test_phase6f_planner.py::test_planner_tool_selection[Download file from http://example.com/data.zip to ./data.zip-download_file] PASSED [ 71%]
+test_phase6f_planner.py::test_planner_tool_selection[Run cargo build-shell] PASSED [ 72%]
+test_phase6f_planner.py::test_planner_tool_selection[Analyze data.csv to find the average-python] PASSED [ 72%]
+test_phase6f_planner.py::test_planner_tool_selection[Transform JSON string '{"a": 1}' into a Python dictionary-python] PASSED [ 72%]
+test_pipeline_kill.py::test_pipeline_kill PASSED                         [ 73%]
+test_plan_validation.py::test_valid_plan_accepted PASSED                 [ 73%]
+test_plan_validation.py::test_valid_plan_risk_propagates_to_high PASSED  [ 73%]
+test_plan_validation.py::test_non_array_plan_rejected PASSED             [ 74%]
+test_plan_validation.py::test_empty_plan_rejected PASSED                 [ 74%]
+test_plan_validation.py::test_malformed_step_not_dict PASSED             [ 74%]
+test_plan_validation.py::test_unknown_tool_rejected PASSED               [ 75%]
+test_plan_validation.py::test_missing_required_arg_rejected PASSED       [ 75%]
+test_plan_validation.py::test_wrong_arg_type_rejected PASSED             [ 75%]
+test_plan_validation.py::test_unknown_field_dropped_repairable PASSED    [ 76%]
+test_plan_validation.py::test_unknown_arg_dropped_repairable PASSED      [ 76%]
+test_plan_validation.py::test_tool_name_casing_repaired PASSED           [ 77%]
+test_plan_validation.py::test_missing_args_object_repaired PASSED        [ 77%]
+test_plan_validation.py::test_mixed_fatal_rejected PASSED                [ 77%]
+test_plan_validation.py::test_risk_classification PASSED                 [ 78%]
+test_plan_validation.py::test_risk_unmapped_defaults_medium PASSED       [ 78%]
+test_plan_validation.py::test_validate_step_strict PASSED                [ 78%]
+test_plan_validation.py::test_validate_never_raises_on_garbage PASSED    [ 79%]
+test_plan_validation.py::test_execution_guards PASSED                    [ 79%]
+test_rule_blocking.py::test_rule_blocking PASSED                         [ 79%]
+test_secret_redaction.py::test_should_redact PASSED                      [ 80%]
+test_secret_redaction.py::test_env_var_redaction PASSED                  [ 80%]
+test_terminate_analysis.py::test_terminate_mechanism PASSED              [ 80%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_repo_queries_hit_existing_capability[Analyze this repo] PASSED [ 81%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_repo_queries_hit_existing_capability[Analyze this codebase] PASSED [ 81%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_repo_queries_hit_existing_capability[Review repository] PASSED [ 81%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_repo_queries_hit_existing_capability[Review this project] PASSED [ 82%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_repo_queries_hit_existing_capability[Summarize project] PASSED [ 82%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_synthesis_collects_evidence[Analyze this repo] PASSED [ 82%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_synthesis_collects_evidence[Analyze this codebase] PASSED [ 83%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_synthesis_collects_evidence[Review repository] PASSED [ 83%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_synthesis_collects_evidence[Summarize project] PASSED [ 83%]
+tests/test_real_world_regressions.py::TestRepositoryAwareness::test_analyze_repo_invokes_llm_synthesis PASSED [ 84%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_queries_collect_snapshot[Analyze this repo] PASSED [ 84%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_queries_collect_snapshot[Analyze this codebase] PASSED [ 85%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_queries_collect_snapshot[Review this codebase] PASSED [ 85%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_queries_collect_snapshot[Summarize this project] PASSED [ 85%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_queries_collect_snapshot[Describe repository architecture] PASSED [ 86%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_repo_snapshot_includes_metadata_files PASSED [ 86%]
+tests/test_real_world_regressions.py::TestRepositoryIntelligence::test_collect_repository_evidence_runs_offline PASSED [ 86%]
+tests/test_real_world_regressions.py::TestMemoryRecall::test_what_do_i_prefer_routes_to_memory PASSED [ 87%]
+tests/test_real_world_regressions.py::TestMemoryRecall::test_what_did_i_teach_you_routes_to_memory PASSED [ 87%]
+tests/test_real_world_regressions.py::TestMemoryRecall::test_package_advice_respects_uv_preference PASSED [ 87%]
+tests/test_real_world_regressions.py::TestMemoryRecall::test_show_install_command_no_execution PASSED [ 88%]
+tests/test_real_world_regressions.py::TestMemoryRecall::test_explain_install_respects_preference PASSED [ 88%]
+tests/test_real_world_regressions.py::TestPlannerInvocation::test_show_install_command_no_planner PASSED [ 88%]
+tests/test_real_world_regressions.py::TestPlannerInvocation::test_install_requests_uses_planner PASSED [ 89%]
+tests/test_real_world_regressions.py::TestPlannerInvocation::test_explain_install_no_planner PASSED [ 89%]
+tests/test_real_world_regressions.py::TestPlannerInvocation::test_create_timer_uses_planner PASSED [ 89%]
+tests/test_real_world_regressions.py::TestFilesystem::test_where_is_implementation_routes_to_search PASSED [ 90%]
+tests/test_real_world_regressions.py::TestFilesystem::test_read_readme PASSED [ 90%]
+tests/test_real_world_regressions.py::TestFilesystem::test_summarize_readme_uses_synthesis PASSED [ 90%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Current project?-workspace_project] PASSED [ 91%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Current language?-workspace_languages] PASSED [ 91%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Current phase?-workspace_phase] PASSED [ 91%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Current RAM-system_ram] PASSED [ 92%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[CPU Usage-system_cpu] PASSED [ 92%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Disk-system_disk] PASSED [ 93%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_world_queries_route_to_capability[Current Directory-workspace_project] PASSED [ 93%]
+tests/test_real_world_regressions.py::TestWorkspaceAndWorld::test_describe_this_project_collects_evidence PASSED [ 93%]
+tests/test_real_world_regressions.py::TestHallucinationPrevention::test_analysis_prompt_forbids_contradicting_evidence PASSED [ 94%]
+tests/test_real_world_regressions.py::TestHallucinationPrevention::test_build_synthesis_prompt_forbids_fabrication PASSED [ 94%]
+tests/test_real_world_regressions.py::TestTraceValidation::test_routing_trace_fields PASSED [ 94%]
+tests/test_trace.py::test_trace_lifecycle PASSED                         [ 95%]
+tests/test_trace.py::test_trace_stages PASSED                            [ 95%]
+tests/test_trace.py::test_trace_evidence PASSED                          [ 95%]
+tests/test_trace.py::test_trace_memory PASSED                            [ 96%]
+tests/test_trace.py::test_trace_routing PASSED                           [ 96%]
+tests/test_trace.py::test_trace_contamination_detection PASSED           [ 96%]
+tests/test_trace.py::test_trace_save PASSED                              [ 97%]
+tests/test_trace.py::test_trace_serialization PASSED                     [ 97%]
+tests/test_trace.py::test_nested_stages PASSED                           [ 97%]
+tests/test_trace.py::test_trace_auto_stage_end PASSED                    [ 98%]
+tests/test_trace_integration.py::test_tracing_disabled_by_default PASSED [ 98%]
+tests/test_trace_integration.py::test_enable_disable_tracing PASSED      [ 98%]
+tests/test_trace_integration.py::test_trace_complete_workflow PASSED     [ 99%]
+tests/test_trace_integration.py::test_trace_contamination_detection_workflow PASSED [ 99%]
+tests/test_trace_integration.py::test_trace_persistence PASSED           [100%]
+
+==================================== ERRORS ====================================
+________________________ ERROR at setup of test_request ________________________
+file /home/lakshay/Projects/Friday/test_phase6_complete.py, line 12
+  async def test_request(bus, user_input):
+      print(f"\n" + "="*50)
+      print(f"Testing Request: {user_input}")
+      print("="*50)
+
+      # Measure Routing latency
+      t0 = time.perf_counter()
+      intent_kind = route_intent(user_input)
+      t1 = time.perf_counter()
+      print(f"Routed as: {intent_kind.upper()} (Latency: {t1 - t0:.4f}s)")
+
+      intent = Intent(
+          kind=intent_kind,
+          payload={"text": user_input},
+          response_future=asyncio.get_running_loop().create_future()
+      )
+
+      # Measure Execution latency
+      await bus.publish(intent)
+
+      response = await intent.response_future
+      t2 = time.perf_counter()
+
+      print(f"\nResponse:\n{response}")
+      print(f"\nExecution Latency: {t2 - t1:.4f}s")
+      print(f"Total Latency: {t2 - t0:.4f}s")
+
+      return response, intent
+E       fixture 'bus' not found
+>       available fixtures: _asyncio_loop_factory, _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/home/lakshay/Projects/Friday/test_phase6_complete.py:12
+=================================== FAILURES ===================================
+______________________________ test_shell_failure ______________________________
+test_execution_tools.py:32: in test_shell_failure
+    r = run_shell(["python3", "-c", "import sys; sys.exit(3)"])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+________________________ test_shell_invalid_executable _________________________
+test_execution_tools.py:41: in test_shell_invalid_executable
+    assert r["exit_code"] is None
+E   assert 127 is None
+__________________________ test_shell_stderr_captured __________________________
+test_execution_tools.py:46: in test_shell_stderr_captured
+    r = run_shell(["python3", "-c", "import sys; print('oops', file=sys.stderr)"])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________ test_shell_environment_variables _______________________
+test_execution_tools.py:67: in test_shell_environment_variables
+    r = run_shell(["python3", "-c", "import os; print(os.environ['FRIDAY_TEST_VAR'])"],
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+___________________ test_shell_argv_no_shell_interpretation ____________________
+test_execution_tools.py:74: in test_shell_argv_no_shell_interpretation
+    r = run_shell(["echo", "a; rm -rf /nonexistent"])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+__________________________ test_shell_unicode_output ___________________________
+test_execution_tools.py:82: in test_shell_unicode_output
+    r = run_shell(["python3", "-c", "print('héllo wörld 日本語 🚀')"])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_status_clean _______________________________
+test_git_tools.py:33: in test_status_clean
+    s = G.git_status(repo)
+        ^^^^^^^^^^^^^^^^^^
+tools/git.py:43: in git_status
+    res = _git(["status", "--porcelain=v2", "--branch"], cwd=repo_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_status_dirty _______________________________
+test_git_tools.py:45: in test_status_dirty
+    s = G.git_status(repo)
+        ^^^^^^^^^^^^^^^^^^
+tools/git.py:43: in git_status
+    res = _git(["status", "--porcelain=v2", "--branch"], cwd=repo_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+____________________________ test_status_not_a_repo ____________________________
+test_git_tools.py:53: in test_status_not_a_repo
+    s = G.git_status(tmp_path)
+        ^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:43: in git_status
+    res = _git(["status", "--porcelain=v2", "--branch"], cwd=repo_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+____________________________ test_diff_working_tree ____________________________
+test_git_tools.py:63: in test_diff_working_tree
+    d = G.git_diff(cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^
+tools/git.py:107: in git_diff
+    res = _git(diff_args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_diff_staged _______________________________
+test_git_tools.py:73: in test_diff_staged
+    d = G.git_diff(staged=True, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:107: in git_diff
+    res = _git(diff_args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+___________________________ test_diff_file_specific ____________________________
+test_git_tools.py:81: in test_diff_file_specific
+    d = G.git_diff(file="file.txt", cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:107: in git_diff
+    res = _git(diff_args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_add_single ________________________________
+test_git_tools.py:90: in test_add_single
+    r = G.git_add(paths=["a.txt"], cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_add_multiple _______________________________
+test_git_tools.py:99: in test_add_multiple
+    r = G.git_add(paths=["a.txt", "b.txt"], cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_________________________________ test_add_all _________________________________
+test_git_tools.py:108: in test_add_all
+    r = G.git_add(all=True, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_____________________________ test_commit_success ______________________________
+test_git_tools.py:118: in test_commit_success
+    G.git_add(paths=["a.txt"], cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+__________________________ test_commit_empty_rejected __________________________
+test_git_tools.py:129: in test_commit_empty_rejected
+    c = G.git_commit("nothing staged", cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:157: in git_commit
+    staged = _git(["diff", "--cached", "--quiet"], cwd=cwd)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_log_default _______________________________
+test_git_tools.py:144: in test_log_default
+    G.git_add(paths=["a.txt"], cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_log_oneline _______________________________
+test_git_tools.py:154: in test_log_oneline
+    lg = G.git_log(oneline=True, cwd=repo)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:184: in git_log
+    res = _git(["log", f"-{limit}", f"--format={fmt}"], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+________________________________ test_log_limit ________________________________
+test_git_tools.py:162: in test_log_limit
+    G.git_add(all=True, cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_branch_list _______________________________
+test_git_tools.py:171: in test_branch_list
+    b = G.git_branch(cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:208: in git_branch
+    res = _git(["branch", "--format=%(refname:short)"], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_branch_create ______________________________
+test_git_tools.py:177: in test_branch_create
+    b = G.git_branch(name="feature", action="create", cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:226: in git_branch
+    res = _git(["branch", name], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_____________________ test_branch_delete_requires_confirm ______________________
+test_git_tools.py:183: in test_branch_delete_requires_confirm
+    G.git_branch(name="feature", action="create", cwd=repo)
+tools/git.py:226: in git_branch
+    res = _git(["branch", name], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_branch_rename ______________________________
+test_git_tools.py:194: in test_branch_rename
+    G.git_branch(name="old", action="create", cwd=repo)
+tools/git.py:226: in git_branch
+    res = _git(["branch", name], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_________________________ test_checkout_create_branch __________________________
+test_git_tools.py:204: in test_checkout_create_branch
+    c = G.git_checkout("topic", create=True, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:276: in git_checkout
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+____________________________ test_checkout_existing ____________________________
+test_git_tools.py:211: in test_checkout_existing
+    G.git_branch(name="dev", action="create", cwd=repo)
+tools/git.py:226: in git_branch
+    res = _git(["branch", name], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_____________________ test_checkout_dirty_requires_confirm _____________________
+test_git_tools.py:219: in test_checkout_dirty_requires_confirm
+    G.git_branch(name="dev", action="create", cwd=repo)
+tools/git.py:226: in git_branch
+    res = _git(["branch", name], cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+______________________________ test_detached_head ______________________________
+test_git_tools.py:229: in test_detached_head
+    c = G.git_checkout(h, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:265: in git_checkout
+    st = git_status(cwd)
+         ^^^^^^^^^^^^^^^
+tools/git.py:43: in git_status
+    res = _git(["status", "--porcelain=v2", "--branch"], cwd=repo_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_____________________________ test_restore_preview _____________________________
+test_git_tools.py:240: in test_restore_preview
+    r = G.git_restore(paths=["file.txt"], preview=True, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:316: in git_restore
+    d = _git(diff_args, cwd=cwd)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+__________________________ test_restore_working_tree ___________________________
+test_git_tools.py:255: in test_restore_working_tree
+    r = G.git_restore(paths=["file.txt"], confirm=True, cwd=repo)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:332: in git_restore
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_____________________________ test_restore_staged ______________________________
+test_git_tools.py:263: in test_restore_staged
+    G.git_add(paths=["file.txt"], cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_reset_soft ________________________________
+test_git_tools.py:274: in test_reset_soft
+    G.git_add(paths=["a.txt"], cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_______________________________ test_reset_mixed _______________________________
+test_git_tools.py:283: in test_reset_mixed
+    G.git_add(paths=["a.txt"], cwd=repo)
+tools/git.py:145: in git_add
+    res = _git(args, cwd=cwd)
+          ^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+__________________________________ test_clone __________________________________
+test_git_tools.py:309: in test_clone
+    r = G.git_clone(str(repo), target_dir=str(dest), cwd=tmp_path)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:365: in git_clone
+    res = _git(args, cwd=cwd, timeout=120)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+____________________________ test_clone_invalid_url ____________________________
+test_git_tools.py:315: in test_clone_invalid_url
+    r = G.git_clone("not-a-real-url://nope/nope", target_dir="x", cwd=tmp_path)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:365: in git_clone
+    res = _git(args, cwd=cwd, timeout=120)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/git.py:17: in _git
+    result = run_shell(["git", *args], cwd=cwd, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/shell.py:56: in run_shell
+    return _run_process(
+tools/process_manager.py:98: in _run_process
+    proc = subprocess.Popen(
+/usr/lib/python3.14/subprocess.py:1039: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.14/subprocess.py:1920: in _execute_child
+    self.pid = _fork_exec(
+E   TypeError: expected str, bytes or os.PathLike object, not list
+_________________ test_hybrid_pipeline_crash_handling[asyncio] _________________
+test_hybrid_error.py:43: in test_hybrid_pipeline_crash_handling
+    assert "CRITICAL INSTRUCTION: The pipeline FAILED" in response
+E   AssertionError: assert 'CRITICAL INSTRUCTION: The pipeline FAILED' in 'Pipeline crashed from `test_pipeline_kill.py`. Evidence shows `test_direct_shell_kill.py`, `test_kill_detailed.py`, `test_kill_process.py`, `test_terminate_analysis.py`, `test_hybrid_error.py` also exist — termination-focused test files. No raw output or error messages from any crashing pipeline run in evidence.'
+----------------------------- Captured stdout call -----------------------------
+[capability] No specific capability matched - falling back to LLM knowledge
+Pipeline crashed from `test_pipeline_kill.py`. Evidence shows `test_direct_shell_kill.py`, `test_kill_detailed.py`, `test_kill_process.py`, `test_terminate_analysis.py`, `test_hybrid_error.py` also exist — termination-focused test files. No raw output or error messages from any crashing pipeline run in evidence.
+----------------------------- Captured stderr call -----------------------------
+[model_client] routing to model=oc/deepseek-v4-flash-free base_url=http://localhost:20128/v1
+[model_client] response served by: deepseek-v4-flash-free
+[model_client] first_token: 6.50s, total: 7.55s
+__________________ test_hybrid_tool_failure_handling[asyncio] __________________
+test_hybrid_error.py:74: in test_hybrid_tool_failure_handling
+    assert "CRITICAL INSTRUCTION: The pipeline FAILED" in response
+E   assert 'CRITICAL INSTRUCTION: The pipeline FAILED' in 'Two `find . -name \'*.py\'` commands hit timeout (-15 signal) — both lacking exclude filters for `.venv`/`__pycache__`, causing search to crawl entire venv until killed at 30s. A third attempt used the robust `find . -name \'*.py\' -type f -not -path \'./.venv/*\' -not -path \'./__pycache__/*\'` and succeeded instantly (0.1s, exit 0). Memory lessons: "Shell commands in this workspace require explicit working directory" and "Always verify file permissions before shell operations" — the latter indirectly relevant (permissions not the issue here, but the lesson exists). When listing project `.py` files, always exclude `.venv`, `__pycache__`, `.pytest_cache`, and `.git` upfront.'
+----------------------------- Captured stdout call -----------------------------
+[capability] No specific capability matched - falling back to LLM knowledge
+Two `find . -name '*.py'` commands hit timeout (-15 signal) — both lacking exclude filters for `.venv`/`__pycache__`, causing search to crawl entire venv until killed at 30s. A third attempt used the robust `find . -name '*.py' -type f -not -path './.venv/*' -not -path './__pycache__/*'` and succeeded instantly (0.1s, exit 0). Memory lessons: "Shell commands in this workspace require explicit working directory" and "Always verify file permissions before shell operations" — the latter indirectly relevant (permissions not the issue here, but the lesson exists). When listing project `.py` files, always exclude `.venv`, `__pycache__`, `.pytest_cache`, and `.git` upfront.
+----------------------------- Captured stderr call -----------------------------
+[model_client] routing to model=oc/deepseek-v4-flash-free base_url=http://localhost:20128/v1
+[model_client] response served by: deepseek-v4-flash-free
+[model_client] first_token: 5.38s, total: 7.43s
+_______________________________ test_integration _______________________________
+test_integration_phase4.py:77: in test_integration
+    assert len(plan) == 1
+E   assert 2 == 1
+E    +  where 2 = len(([], None))
+----------------------------- Captured stdout call -----------------------------
+=== Phase 4 Integration Test ===
+
+[1] Testing imports...
+✓ All Phase 4 modules import successfully
+
+[2] Testing WorldState creation...
+✓ WorldState created with 7 components
+
+[3] Testing health evaluation...
+✓ Health: healthy (CPU: 60.2%, RAM: 65.6%)
+
+[4] Testing events system...
+✓ Event log working (1 events)
+
+[5] Testing rule engine...
+✓ Rule engine operational (no rules triggered)
+
+[6] Testing planner integration...
+----------------------------- Captured stderr call -----------------------------
+[planner] error: test_integration.<locals>.mock_call() got an unexpected keyword argument 'stream_to_stdout'
+_____________________________ test_phase3_complete _____________________________
+test_phase3_complete.py:79: in test_phase3_complete
+    assert speedup > 2, f'Cache should provide speedup, got {speedup}x'
+E   AssertionError: Cache should provide speedup, got 1.6294662791329229x
+E   assert 1.6294662791329229 > 2
+----------------------------- Captured stdout call -----------------------------
+=== Phase 3: Environment Awareness - Verification ===
+
+✓ EnvironmentState has all required fields including observed_at
+✓ workspace observer returns dict
+✓ network observer returns dict
+✓ computer observer returns dict
+✓ developer observer returns dict
+✓ os observer returns dict
+✓ Secret redaction working
+_____________________________ test_planner_context _____________________________
+test_phase4.py:256: in test_planner_context
+    assert "World State:" in captured_prompt
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'NoneType' is not a container or iterable
+----------------------------- Captured stdout call -----------------------------
+=== Test 10: Planner Context ===
+----------------------------- Captured stderr call -----------------------------
+[planner] error: test_planner_context.<locals>.capture() got an unexpected keyword argument 'stream_to_stdout'
+___________________________ test_phase4_integration ____________________________
+test_phase4_wired.py:35: in test_phase4_integration
+    assert indicator in pipeline_source, f"Missing {indicator}"
+E   AssertionError: Missing evaluate_rules
+E   assert 'evaluate_rules' in 'async def run_pipeline(run: PipelineRun) -> str:\n    """Execute a task pipeline with continuous observation.\n\n    Architecture:\n        Observe → Plan → Execute Step → Observe → Apply Rules → Update WorldState → Continue\n\n    Returns:\n        Summary string for the user\n    """\n    import asyncio\n\n    task = run.intent.payload.get("text", "")\n\n    # Initialize memory manager\n    from memory.manager import MemoryManager\n    memory_manager = MemoryManager()\n    lesson_from_final_attempt = None\n\n    # Initialize world state\n    t_observe_start = time.perf_counter()\n    if run.world is None:\n        runtime = RuntimeState(\n            task_text=task,\n            pipeline_active=True,\n            task_start_time=time.time(),\n            verbose_mode=VERBOSE_PIPELINE,\n        )\n        run.world = await observe_world(cwd=".", runtime=runtime)\n    t_observe = time.perf_counter() - t_observe_start\n\n    # Initialize event log and watchdog\n    events = EventLog()\n    watchdog = ExecutionWatchdog()\n    tracked_pids = set()\n\n    # Initial health check\n    t_health_start = time.perf_counter()\n    health = evaluate_health(run.world.network.internet_reachab...idate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s reflect={t_reflect:.2f}s", file=sys.stderr)\n            return f"Task failed after {run.retry_count + 1} attempt(s). {len(failures)} step(s) failed."\n\n        run.retry_count += 1\n\n    run.status = "failed"\n    run.world.runtime.pipeline_active = False\n\n    # Process run for history and admission (exhausted retries)\n    t_process_start = time.perf_counter()\n    await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)\n    t_process = time.perf_counter() - t_process_start\n\n    # Phase 12: Engineering Reflection\n    t_reflect_start = time.perf_counter()\n    _reflect_on_execution(run, run.world, {\n        "observe": t_observe,\n        "health": t_health,\n        "memory_search": t_memory_search,\n        "plan": t_plan,\n        "process": t_process\n    })\n    t_reflect = time.perf_counter() - t_reflect_start\n\n    print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s process={t_process:.2f}s reflect={t_reflect:.2f}s", file=sys.stderr)\n    return "Task failed - exceeded maximum retries."\n'
+----------------------------- Captured stdout call -----------------------------
+======================================================================
+PHASE 4 END-TO-END VERIFICATION
+======================================================================
+
+[1] Pipeline Integration
+  ✓ Orchestrator imports core.pipeline
+  ✓ Uses WorldState
+  ✓ Continuous observation
+  ✓ Health monitoring
+=============================== warnings summary ===============================
+test_direct_shell_kill.py::test_direct_shell_kill
+  /home/lakshay/.local/lib/python3.14/site-packages/_pytest/python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but test_direct_shell_kill.py::test_direct_shell_kill returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_kill_process.py::test_kill_running_process
+  /home/lakshay/.local/lib/python3.14/site-packages/_pytest/python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but test_kill_process.py::test_kill_running_process returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED test_execution_tools.py::test_shell_failure - TypeError: expected str,...
+FAILED test_execution_tools.py::test_shell_invalid_executable - assert 127 is...
+FAILED test_execution_tools.py::test_shell_stderr_captured - TypeError: expec...
+FAILED test_execution_tools.py::test_shell_environment_variables - TypeError:...
+FAILED test_execution_tools.py::test_shell_argv_no_shell_interpretation - Typ...
+FAILED test_execution_tools.py::test_shell_unicode_output - TypeError: expect...
+FAILED test_git_tools.py::test_status_clean - TypeError: expected str, bytes ...
+FAILED test_git_tools.py::test_status_dirty - TypeError: expected str, bytes ...
+FAILED test_git_tools.py::test_status_not_a_repo - TypeError: expected str, b...
+FAILED test_git_tools.py::test_diff_working_tree - TypeError: expected str, b...
+FAILED test_git_tools.py::test_diff_staged - TypeError: expected str, bytes o...
+FAILED test_git_tools.py::test_diff_file_specific - TypeError: expected str, ...
+FAILED test_git_tools.py::test_add_single - TypeError: expected str, bytes or...
+FAILED test_git_tools.py::test_add_multiple - TypeError: expected str, bytes ...
+FAILED test_git_tools.py::test_add_all - TypeError: expected str, bytes or os...
+FAILED test_git_tools.py::test_commit_success - TypeError: expected str, byte...
+FAILED test_git_tools.py::test_commit_empty_rejected - TypeError: expected st...
+FAILED test_git_tools.py::test_log_default - TypeError: expected str, bytes o...
+FAILED test_git_tools.py::test_log_oneline - TypeError: expected str, bytes o...
+FAILED test_git_tools.py::test_log_limit - TypeError: expected str, bytes or ...
+FAILED test_git_tools.py::test_branch_list - TypeError: expected str, bytes o...
+FAILED test_git_tools.py::test_branch_create - TypeError: expected str, bytes...
+FAILED test_git_tools.py::test_branch_delete_requires_confirm - TypeError: ex...
+FAILED test_git_tools.py::test_branch_rename - TypeError: expected str, bytes...
+FAILED test_git_tools.py::test_checkout_create_branch - TypeError: expected s...
+FAILED test_git_tools.py::test_checkout_existing - TypeError: expected str, b...
+FAILED test_git_tools.py::test_checkout_dirty_requires_confirm - TypeError: e...
+FAILED test_git_tools.py::test_detached_head - TypeError: expected str, bytes...
+FAILED test_git_tools.py::test_restore_preview - TypeError: expected str, byt...
+FAILED test_git_tools.py::test_restore_working_tree - TypeError: expected str...
+FAILED test_git_tools.py::test_restore_staged - TypeError: expected str, byte...
+FAILED test_git_tools.py::test_reset_soft - TypeError: expected str, bytes or...
+FAILED test_git_tools.py::test_reset_mixed - TypeError: expected str, bytes o...
+FAILED test_git_tools.py::test_clone - TypeError: expected str, bytes or os.P...
+FAILED test_git_tools.py::test_clone_invalid_url - TypeError: expected str, b...
+FAILED test_hybrid_error.py::test_hybrid_pipeline_crash_handling[asyncio] - A...
+FAILED test_hybrid_error.py::test_hybrid_tool_failure_handling[asyncio] - ass...
+FAILED test_integration_phase4.py::test_integration - assert 2 == 1
+FAILED test_phase3_complete.py::test_phase3_complete - AssertionError: Cache ...
+FAILED test_phase4.py::test_planner_context - TypeError: argument of type 'No...
+FAILED test_phase4_wired.py::test_phase4_integration - AssertionError: Missin...
+ERROR test_phase6_complete.py::test_request
+======= 41 failed, 245 passed, 2 warnings, 1 error in 823.97s (0:13:43) ========
