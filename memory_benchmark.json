@@ -1,0 +1,98 @@
+{
+  "corpus": [
+    {
+      "id": "mem_001",
+      "type": "Episodic",
+      "content": "Attempted to list files in /root, failed with permission denied."
+    },
+    {
+      "id": "mem_002",
+      "type": "Lesson",
+      "content": "Never attempt to read files in /root. Always use /tmp for scratch files."
+    },
+    {
+      "id": "mem_003",
+      "type": "Teaching",
+      "content": "The project uses uv instead of pip for Python dependencies. Always use uv pip install."
+    },
+    {
+      "id": "mem_004",
+      "type": "Episodic",
+      "content": "Built Rust project successfully using cargo build --release."
+    },
+    {
+      "id": "mem_005",
+      "type": "Lesson",
+      "content": "The frontend React app requires npm run dev to start the development server, but it must be run with NODE_ENV=development."
+    },
+    {
+      "id": "mem_006",
+      "type": "Teaching",
+      "content": "Do not delete any .git folders. We need to preserve project history."
+    },
+    {
+      "id": "mem_007",
+      "type": "Episodic",
+      "content": "Failed to connect to postgres on localhost:5432. Realized database port was 5433."
+    },
+    {
+      "id": "mem_008",
+      "type": "Lesson",
+      "content": "PostgreSQL in this environment runs on port 5433, not 5432."
+    },
+    {
+      "id": "mem_009",
+      "type": "Teaching",
+      "content": "Use ripgrep (rg) for searching instead of grep for better performance."
+    },
+    {
+      "id": "mem_010",
+      "type": "Episodic",
+      "content": "Deployed the staging environment, deployment took 45 seconds."
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": 1,
+      "query": "How should I add new packages for the python script?",
+      "expected_top_k": ["mem_003"],
+      "category": "Teaching",
+      "description": "Semantic query avoiding exact keywords like 'install', 'pip', 'uv'."
+    },
+    {
+      "scenario_id": 2,
+      "query": "Where is the DB listening?",
+      "expected_top_k": ["mem_008", "mem_007"],
+      "category": "Lesson",
+      "description": "Semantic query using 'DB' and 'listening' instead of 'PostgreSQL' and 'port'."
+    },
+    {
+      "scenario_id": 3,
+      "query": "Is it safe to look inside the admin superuser folder?",
+      "expected_top_k": ["mem_002", "mem_001"],
+      "category": "Constraints",
+      "description": "Semantic query for /root constraint."
+    },
+    {
+      "scenario_id": 4,
+      "query": "What is the command to spin up the UI in dev mode?",
+      "expected_top_k": ["mem_005"],
+      "category": "Project Context",
+      "description": "Semantic query avoiding 'React', 'npm'."
+    },
+    {
+      "scenario_id": 5,
+      "query": "I want to quickly find some text in the repo, what's the fastest tool?",
+      "expected_top_k": ["mem_009"],
+      "category": "Preferences",
+      "description": "Semantic query avoiding 'search', 'ripgrep', 'grep'."
+    },
+    {
+      "scenario_id": 6,
+      "query": "Remove the version control tracking directories",
+      "expected_top_k": ["mem_006"],
+      "category": "Safety",
+      "description": "Semantic query avoiding 'delete', '.git', 'history'."
+    }
+  ]
+}

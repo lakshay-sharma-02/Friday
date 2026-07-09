@@ -133,14 +133,15 @@ class TestCapabilityRouter:
 
         # Direct execution (instant)
         decision = router.route("Current RAM?")
-        strategy = router.get_execution_strategy(decision.capability)
+        strategy = router.get_execution_strategy(decision.capability, decision.operation)
         assert strategy["execution_path"] == "direct"
         assert not strategy["requires_planner"]
 
         # LLM execution - use more specific conceptual question
         decision = router.route("Explain the concept of Rust ownership")
-        strategy = router.get_execution_strategy(decision.capability)
-        assert strategy["execution_path"] in ["llm", "direct"]  # May match knowledge or other capability
+        strategy = router.get_execution_strategy(decision.capability, decision.operation)
+        # Synthesis collects evidence then asks the LLM (correct for explanations).
+        assert strategy["execution_path"] in ["llm", "direct", "synthesis"]
         if decision.capability.name == "conceptual_knowledge":
             assert strategy["requires_llm"]
 

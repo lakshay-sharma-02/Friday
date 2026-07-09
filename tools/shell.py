@@ -8,7 +8,7 @@ can be inspected/terminated via the `process` tool. Legacy `kill_process` /
 """
 
 import os
-import shlex
+import shutil
 from tools.process_manager import (
     _run_process,
     spawn_process as _spawn_process,
@@ -17,23 +17,29 @@ from tools.process_manager import (
 )
 
 
-def _to_argv(command):
-    return shlex.split(command) if isinstance(command, str) else list(command)
+def _resolve_shell() -> str:
+    """Prefer a real shell binary so pipelines/redirects work."""
+    for candidate in ("/bin/bash", "/usr/bin/bash", "bash", "sh", "/bin/sh"):
+        if shutil.which(candidate) or os.path.exists(candidate):
+            return candidate
+    return "/bin/sh"
+
+
+_SHELL_BIN = _resolve_shell()
 
 
 def run_shell(command, *, cwd=None, timeout=30, env=None,
               cancel_event=None, graceful_timeout=5.0) -> dict:
-    """Execute an OS command and return a structured result (blocks).
+    """Execute an OS command via a real shell (pipes, &&, redirects work).
 
     Args:
-        command: command string (shlex-split) or list of argv
+        command: shell command string
         cwd: working directory
         timeout: max seconds before graceful kill
         env: extra/override environment variables (merged over os.environ)
         cancel_event: threading.Event that aborts early when set
     """
-    argv = _to_argv(command)
-    if not argv:
+    if not command or (isinstance(command, str) and not command.strip()):
         return {
             "command": "",
             "argv": [],
@@ -47,8 +53,11 @@ def run_shell(command, *, cwd=None, timeout=30, env=None,
             "reason": "empty command",
         }
     merged = {**os.environ, **env} if env else None
-    return _run_process(argv, cwd=cwd, env=merged, timeout=timeout,
-                         cancel_event=cancel_event, graceful_timeout=graceful_timeout)
+    return _run_process(
+        [_SHELL_BIN, "-c", command],
+        cwd=cwd, env=merged, timeout=timeout,
+        cancel_event=cancel_event, graceful_timeout=graceful_timeout,
+    )
 
 
 def start_shell(command, *, cwd=None, env=None, graceful_timeout=5.0) -> dict:
@@ -57,12 +66,14 @@ def start_shell(command, *, cwd=None, env=None, graceful_timeout=5.0) -> dict:
     The process is tracked until it exits and can be inspected or terminated
     via the `process` tool. Never blocks.
     """
-    argv = _to_argv(command)
-    if not argv:
+    if not command or (isinstance(command, str) and not command.strip()):
         return {"command": "", "argv": [], "pid": None, "success": False,
                 "reason": "empty command"}
     merged = {**os.environ, **env} if env else None
-    return _spawn_process(argv, cwd=cwd, env=merged, graceful_timeout=graceful_timeout)
+    return _spawn_process(
+        [_SHELL_BIN, "-c", command],
+        cwd=cwd, env=merged, graceful_timeout=graceful_timeout,
+    )
 
 
 # --- Legacy API retained for core/pipeline.py watchdog compatibility ---

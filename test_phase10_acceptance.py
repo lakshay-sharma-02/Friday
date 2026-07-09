@@ -314,7 +314,7 @@ class TestPlannerIntegration:
 
         for query in simple_queries:
             decision = router.route(query)
-            strategy = router.get_execution_strategy(decision.capability)
+            strategy = router.get_execution_strategy(decision.capability, decision.operation)
 
             # Should be direct execution (no planning)
             assert strategy["execution_path"] == "direct"
@@ -333,7 +333,7 @@ class TestPlannerIntegration:
 
         for query in complex_queries:
             decision = router.route(query)
-            strategy = router.get_execution_strategy(decision.capability)
+            strategy = router.get_execution_strategy(decision.capability, decision.operation)
 
             # Should require planning
             if decision.capability.category == CapabilityCategory.EXECUTION:

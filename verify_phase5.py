@@ -152,7 +152,7 @@ async def verify_phase5():
     # Age a run
     old_date = (datetime.now(timezone.utc) - timedelta(days=25)).isoformat()
     store._conn.execute(
-        "UPDATE runs SET last_accessed_at = ?, access_count = 0 WHERE id = ?",
+        "UPDATE memories SET last_accessed = ?, reinforcement_count = 0 WHERE id = ?",
         (old_date, run1_id)
     )
     store._conn.commit()
@@ -161,7 +161,7 @@ async def verify_phase5():
     print(f"   Retier results: {moved}")
 
     # Check tier changed
-    cursor = store._conn.execute("SELECT tier FROM runs WHERE id = ?", (run1_id,))
+    cursor = store._conn.execute("SELECT importance FROM memories WHERE id = ?", (run1_id,))
     tier = cursor.fetchone()[0]
     print(f"   Run tier after retiering: {tier}")
 

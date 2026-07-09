@@ -96,15 +96,16 @@ async def run_pipeline(run: PipelineRun) -> str:
         Summary string for the user
     """
     import asyncio
-    from memory import MemoryStore
 
     task = run.intent.payload.get("text", "")
 
-    # Initialize memory store
-    store = MemoryStore()
+    # Initialize memory manager
+    from memory.manager import MemoryManager
+    memory_manager = MemoryManager()
     lesson_from_final_attempt = None
 
     # Initialize world state
+    t_observe_start = time.perf_counter()
     if run.world is None:
         runtime = RuntimeState(
             task_text=task,
@@ -113,6 +114,7 @@ async def run_pipeline(run: PipelineRun) -> str:
             verbose_mode=VERBOSE_PIPELINE,
         )
         run.world = await observe_world(cwd=".", runtime=runtime)
+    t_observe = time.perf_counter() - t_observe_start
 
     # Initialize event log and watchdog
     events = EventLog()
@@ -120,17 +122,22 @@ async def run_pipeline(run: PipelineRun) -> str:
     tracked_pids = set()
 
     # Initial health check
+    t_health_start = time.perf_counter()
     health = evaluate_health(run.world.network.internet_reachable)
     _format_world_verbose(run.world, health, events)
+    t_health = time.perf_counter() - t_health_start
 
     # Memory search for relevant past attempts
+    t_memory_search_start = time.perf_counter()
     memory_results = []
     try:
-        memory_results = await asyncio.to_thread(store.search, task, limit=3)
+        # Retrieve relevant past experiences using MemoryManager
+        memory_results = await asyncio.to_thread(memory_manager.search, task, limit=3)
         if memory_results and VERBOSE_PIPELINE:
             print(f"[memory] found {len(memory_results)} relevant past attempts", file=sys.stderr)
     except Exception as e:
         print(f"[memory] search failed: {e}", file=sys.stderr)
+    t_memory_search = time.perf_counter() - t_memory_search_start
 
     while run.retry_count <= run.max_retries:
         retry_context = ""
@@ -141,25 +148,31 @@ async def run_pipeline(run: PipelineRun) -> str:
         print(f"[pipeline] planning...", file=sys.stderr)
 
         # Plan with full world context and memory
+        t_plan_start = time.perf_counter()
         plan, lesson = await create_plan(task, run.world, health, events.recent(10), retry_context, memory_results)
+        t_plan = time.perf_counter() - t_plan_start
 
         # Store lesson from final attempt only (whether success or failure)
         if lesson:
             lesson_from_final_attempt = lesson
 
         if not plan:
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s", file=sys.stderr)
             return "Could not generate a valid plan for this task."
 
         run.plan = plan
         print(f"[pipeline] plan has {len(plan)} step(s)", file=sys.stderr)
 
         # Validate + repair + risk-tag before anything reaches the executor.
+        t_validate_start = time.perf_counter()
         validation = validate_and_prepare_plan(plan)
+        t_validate = time.perf_counter() - t_validate_start
         if not validation["accepted"]:
             detail = "; ".join(
                 f"step {e['step']}: {e['error']}" for e in validation["errors"]
             )
             print(f"[pipeline] plan rejected: {detail}", file=sys.stderr)
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s", file=sys.stderr)
             return f"Plan rejected: {validation['message']} ({detail})"
 
         for r in validation["repairs"]:
@@ -169,6 +182,7 @@ async def run_pipeline(run: PipelineRun) -> str:
         run.plan_risk_level = validation["risk_level"]
 
         if not valid_steps:
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s", file=sys.stderr)
             return "Plan validation failed - no valid steps to execute."
 
         # Update runtime with plan info
@@ -178,9 +192,11 @@ async def run_pipeline(run: PipelineRun) -> str:
 
         # Delegate execution loop to Executor
         from core.executor import execute_plan
+        t_execute_start = time.perf_counter()
         health = await execute_plan(
             valid_steps, run, health, events, watchdog, tracked_pids
         )
+        t_execute = time.perf_counter() - t_execute_start
 
         # Check for failures after all steps
         failures = [entry for entry in run.execution_log if not entry["success"]]
@@ -189,42 +205,24 @@ async def run_pipeline(run: PipelineRun) -> str:
             run.status = "completed"
             run.world.runtime.pipeline_active = False
 
-            # Store run in memory (success case)
-            try:
-                await asyncio.to_thread(store.put_run, run)
-            except Exception as e:
-                print(f"[memory] failed to store run: {e}", file=sys.stderr)
+            # Process run for history and admission
+            t_process_start = time.perf_counter()
+            await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
+            t_process = time.perf_counter() - t_process_start
 
-            # Store lesson if this was the final successful attempt with a lesson
-            if lesson_from_final_attempt:
-                try:
-                    await asyncio.to_thread(store.add_note, lesson_from_final_attempt, "lesson", run.intent.id)
-                    if VERBOSE_PIPELINE:
-                        print(f"[memory] saved lesson: {lesson_from_final_attempt}", file=sys.stderr)
-                except Exception as e:
-                    print(f"[memory] failed to store lesson: {e}", file=sys.stderr)
-
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s", file=sys.stderr)
             return f"Task completed successfully after {len(run.execution_log)} step(s)."
 
         if run.retry_count >= run.max_retries:
             run.status = "failed"
             run.world.runtime.pipeline_active = False
 
-            # Store run in memory (failure case - equally important to remember)
-            try:
-                await asyncio.to_thread(store.put_run, run)
-            except Exception as e:
-                print(f"[memory] failed to store run: {e}", file=sys.stderr)
+            # Process run for history and admission (failure case)
+            t_process_start = time.perf_counter()
+            await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
+            t_process = time.perf_counter() - t_process_start
 
-            # Store lesson if there was one from the final attempt
-            if lesson_from_final_attempt:
-                try:
-                    await asyncio.to_thread(store.add_note, lesson_from_final_attempt, "lesson", run.intent.id)
-                    if VERBOSE_PIPELINE:
-                        print(f"[memory] saved lesson: {lesson_from_final_attempt}", file=sys.stderr)
-                except Exception as e:
-                    print(f"[memory] failed to store lesson: {e}", file=sys.stderr)
-
+            print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s validate={t_validate:.2f}s execute={t_execute:.2f}s process={t_process:.2f}s", file=sys.stderr)
             return f"Task failed after {run.retry_count + 1} attempt(s). {len(failures)} step(s) failed."
 
         run.retry_count += 1
@@ -232,10 +230,10 @@ async def run_pipeline(run: PipelineRun) -> str:
     run.status = "failed"
     run.world.runtime.pipeline_active = False
 
-    # Store run in memory (exhausted retries case)
-    try:
-        await asyncio.to_thread(store.put_run, run)
-    except Exception as e:
-        print(f"[memory] failed to store run: {e}", file=sys.stderr)
+    # Process run for history and admission (exhausted retries)
+    t_process_start = time.perf_counter()
+    await asyncio.to_thread(memory_manager.process_run, run, lesson_from_final_attempt)
+    t_process = time.perf_counter() - t_process_start
 
+    print(f"[pipeline] timing breakdown: observe={t_observe:.2f}s health={t_health:.2f}s memory_search={t_memory_search:.2f}s plan={t_plan:.2f}s process={t_process:.2f}s", file=sys.stderr)
     return "Task failed - exceeded maximum retries."

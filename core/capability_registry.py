@@ -199,9 +199,15 @@ class CapabilityRegistry:
             requires_executor=False,
             requires_llm=False,
             latency=LatencyCategory.INSTANT,
-            keywords=["project", "project name", "current project"],
-            synonyms=["project name", "what project", "which project"],
-            supported_operations={Operation.READ, Operation.SUMMARIZE}
+            keywords=["project", "project name", "current project", "this project",
+                      "this repo", "this code", "repo", "repository", "codebase",
+                      "workspace", "working tree", "source tree", "current code",
+                      "current workspace", "current directory", "describe this project"],
+            synonyms=["project name", "what project", "which project", "what repo",
+                      "analyze this repo", "analyze this codebase",
+                      "summarize project", "describe this project", "this codebase",
+                      "this repository", "our project", "our repo", "our codebase"],
+            supported_operations={Operation.READ, Operation.SUMMARIZE, Operation.EXPLAIN, Operation.ANALYZE}
         ))
 
         self.register(CapabilityMetadata(
@@ -307,8 +313,12 @@ class CapabilityRegistry:
             requires_executor=False,
             requires_llm=True,  # LLM synthesizes memory results
             latency=LatencyCategory.FAST,
-            keywords=["remember", "taught", "teach", "preference", "recall"],
-            synonyms=["my name", "what did i", "do you remember"],
+            keywords=["remember", "taught", "teach", "preference", "recall",
+                      "what do i prefer", "what do you remember", "what did i teach you",
+                      "what do i usually use", "what have i told you", "remembered preferences",
+                      "what did you learn", "do you recall"],
+            synonyms=["my name", "what did i", "do you remember", "what i prefer",
+                      "my preferences", "what i taught", "things i taught", "what i told you"],
             supported_operations={Operation.RECALL, Operation.REMEMBER, Operation.REFLECT, Operation.ADVISE}
         ))
 
@@ -324,8 +334,10 @@ class CapabilityRegistry:
             requires_llm=False,
             requires_tools=["search_files"],
             latency=LatencyCategory.MODERATE,
-            keywords=["where is", "find", "search", "locate", "memorymanager"],
-            synonyms=["where is", "find file", "search for", "locate", "find class", "find function"],
+            keywords=["where is", "find", "search", "locate", "which file",
+                      "memorymanager", "implemented", "where is implemented", "search for"],
+            synonyms=["where is", "find file", "search for", "locate", "find class",
+                      "find function", "which file contains", "show implementation"],
             supported_operations={Operation.SEARCH, Operation.LOOKUP}
         ))
 
@@ -389,9 +401,17 @@ class CapabilityRegistry:
             requires_executor=True,
             requires_llm=True,
             latency=LatencyCategory.SLOW,
-            keywords=["install", "setup", "configure", "build", "deploy", "changed", "review repository", "summarize project"],
-            synonyms=["execute", "run", "perform", "what changed"],
-            supported_operations={Operation.EXECUTE, Operation.MODIFY, Operation.PLAN, Operation.REVIEW, Operation.SUMMARIZE}
+            keywords=["install", "setup", "configure", "build", "deploy", "changed",
+                      "review", "review repository", "review codebase", "summarize project",
+                      "analyze this repo", "analyze this codebase", "review this project",
+                      "how should i install", "what command installs", "how do i add",
+                      "how would you install", "show install command", "without executing",
+                      "do not install", "don't execute", "explain how to install", "explain how to"],
+            synonyms=["execute", "run", "perform", "what changed", "analyze this repository",
+                      "review repository", "summarize the project", "describe this project"],
+            supported_operations={Operation.EXECUTE, Operation.MODIFY, Operation.PLAN,
+                                  Operation.REVIEW, Operation.SUMMARIZE, Operation.ANALYZE,
+                                  Operation.ADVISE, Operation.EXPLAIN}
         ))
 
 

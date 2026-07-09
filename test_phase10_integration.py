@@ -100,8 +100,8 @@ class TestCapabilityLayerIntegration:
         print(f"Execution Path: {metadata.get('execution_path')}")
 
         assert metadata.get('category') == 'knowledge'
-        # Execution path can be 'direct' or 'llm' depending on capability executor implementation
-        assert metadata.get('execution_path') in ['direct', 'llm']
+        # Explanations now collect evidence then synthesize (synthesis path).
+        assert metadata.get('execution_path') in ['direct', 'llm', 'synthesis']
 
 
 if __name__ == "__main__":

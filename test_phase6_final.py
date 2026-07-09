@@ -177,18 +177,17 @@ async def test_5():
     store = MemoryStore()
     conn = sqlite3.connect('.friday_memory.db')
     cursor = conn.cursor()
-
-    cursor.execute('SELECT COUNT(*) FROM runs')
+    cursor.execute('SELECT COUNT(*) FROM history')
     count = cursor.fetchone()[0]
-
-    cursor.execute('SELECT id, intent_kind, status FROM runs ORDER BY created_at DESC LIMIT 3')
+    
+    cursor.execute('SELECT id, intent_id, run_status FROM history ORDER BY timestamp DESC LIMIT 3')
     recent = cursor.fetchall()
 
     print(f"\nMemory stats:")
     print(f"  Total runs: {count}")
     print(f"  Recent runs:")
-    for run_id, kind, status in recent:
-        print(f"    {run_id[:8]}... kind={kind} status={status}")
+    for run_id, intent_id, status in recent:
+        print(f"    {run_id[:8]}... intent_id={intent_id[:8]} status={status}")
 
     conn.close()
 

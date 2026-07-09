@@ -4,6 +4,7 @@ from tools.shell import run_shell, start_shell
 from tools.python import run_python, start_python
 from tools.process import run_process_tool
 from tools.files import read_file, write_file, list_directory, search_files, replace_in_file, diff_files
+from tools.timer import run_timer
 from tools.git import (
     git_status,
     git_diff,
@@ -296,5 +297,14 @@ TOOL_REGISTRY = {
             "cwd": {"type": "string", "required": False, "description": "Base directory"},
         },
         "handler": git_clone,
+    },
+    "timer": {
+        "description": "Named countdown timers with pause/resume/cancel (in-memory, process-local)",
+        "args": {
+            "action": {"type": "string", "required": True, "description": "create | remaining | pause | resume | cancel | list"},
+            "name": {"type": "string", "required": False, "description": "Timer identifier (required for all actions but list)"},
+            "seconds": {"type": "number", "required": False, "description": "Duration in seconds (required for create)"},
+        },
+        "handler": run_timer,
     },
 }

@@ -16,6 +16,7 @@ from core.project_context import ProjectContext
 from core.world_manager import observe_world
 from core.world import RuntimeState
 from core.operations import Operation
+from core.evidence import EvidenceBundle
 
 
 class CapabilityLayer:
@@ -111,8 +112,17 @@ class CapabilityLayer:
         # Step 2: Build prompt with memory context
         prompt_parts = []
 
+        prompt_parts.append(
+            "Retrieved evidence (especially explicit teachings and remembered "
+            "preferences) is AUTHORITATIVE and takes precedence over your own "
+            "model priors. Never recommend something that contradicts a retrieved "
+            "preference (e.g. if memory says 'use uv', do NOT suggest pip unless the "
+            "user explicitly asks to ignore their preferences)."
+        )
+        prompt_parts.append("")
+
         if memory_results:
-            prompt_parts.append("User's remembered preferences:")
+            prompt_parts.append("User's remembered preferences (highest priority):")
             for result in memory_results:
                 content = result.get("content", result.get("text", ""))
                 if content:
@@ -184,13 +194,41 @@ class CapabilityLayer:
         evidence from authoritative sources, then LLM synthesizes.
         """
         from core.model_client import call_model
+        from core.evidence import (
+            collect_workspace_evidence,
+            collect_git_evidence,
+            collect_system_evidence,
+            collect_document_evidence,
+            collect_memory_evidence,
+            build_synthesis_prompt,
+        )
+        from memory.manager import MemoryManager
+        from datetime import datetime
         import time
 
         t_start = time.perf_counter()
 
-        # For now, delegate to LLM directly
-        # Future: collect evidence first, then synthesize
-        response = await call_model(query, enable_thinking=False)
+        # Collect evidence from authoritative sources BEFORE asking the LLM.
+        from core.world import RuntimeState
+        world = await observe_world(cwd=".", runtime=RuntimeState())
+        project_context = ProjectContext.from_workspace(world.workspace, ".")
+
+        bundle = EvidenceBundle()
+        bundle.items.extend(collect_workspace_evidence(world, project_context).items)
+        bundle.items.extend(collect_git_evidence(world).items)
+        bundle.items.extend(collect_system_evidence(world).items)
+        bundle.items.extend(collect_document_evidence(".").items)
+
+        memory_manager = MemoryManager()
+        try:
+            mem_results = await asyncio.to_thread(memory_manager.search, query, limit=5)
+        except Exception:
+            mem_results = []
+        bundle.items.extend(collect_memory_evidence(memory_manager, query).items)
+
+        prompt = build_synthesis_prompt(bundle, query)
+
+        response = await call_model(prompt, enable_thinking=False)
 
         latency_ms = (time.perf_counter() - t_start) * 1000
 
@@ -198,8 +236,11 @@ class CapabilityLayer:
             "execution_path": "synthesis",
             "operation": decision.operation.value,
             "latency_ms": latency_ms,
-            "source": "LLM synthesis",
-            "used_llm": True
+            "source": "Evidence + LLM synthesis",
+            "used_llm": True,
+            "evidence_sources": sorted({e.source.value for e in bundle.items}),
+            "evidence_items": len(bundle.items),
+            "used_memory": len(mem_results) > 0,
         }
 
         return response, metadata

@@ -1,90 +1,65 @@
-"""Deterministic importance tiering based on access patterns."""
+"""Deterministic importance tiering based on access patterns (Phase 7A Shim)."""
 
 from datetime import datetime, timezone, timedelta
 
-
 def compute_tier(last_accessed_at: datetime, access_count: int) -> str:
     """Compute tier based on last access time and access count.
-
-    Deterministic formula-based tiering (no LLM judgment):
-    - HOT: last_accessed_at within 24 hours OR access_count >= 5
-    - WARM: last_accessed_at within 14 days
-    - COLD: everything else
-
-    Args:
-        last_accessed_at: Last time the row was accessed
-        access_count: Number of times accessed
-
-    Returns:
-        Tier string: "HOT", "WARM", or "COLD"
+    
+    HOT: accessed in last 24h or access_count >= 5
+    WARM: accessed in last 14 days
+    COLD: everything else
     """
     now = datetime.now(timezone.utc)
-
-    # HOT: accessed in last 24h or high access count
     if access_count >= 5:
         return "HOT"
-
     if last_accessed_at:
         time_since_access = now - last_accessed_at
         if time_since_access <= timedelta(hours=24):
             return "HOT"
         elif time_since_access <= timedelta(days=14):
             return "WARM"
-
     return "COLD"
 
+def _tier_to_importance(tier: str) -> float:
+    return {"HOT": 1.0, "WARM": 0.5, "COLD": 0.0}.get(tier, 0.0)
+
+def _importance_to_tier(importance: float) -> str:
+    if importance > 0.8:
+        return "HOT"
+    if importance > 0.3:
+        return "WARM"
+    return "COLD"
 
 def retier_all(store: "MemoryStore") -> dict:
-    """Recompute and update tier for all rows in both tables.
-
-    Args:
-        store: MemoryStore instance
-
-    Returns:
-        Dict with counts of rows moved per tier
+    """Recompute importance for all rows in the memories table.
+    
+    Compatibility shim for Phase 5 tests.
     """
     import sys
-
     try:
         moved = {"HOT": 0, "WARM": 0, "COLD": 0}
-
-        # Retier runs
-        runs = store.get_all_runs()
-        for run in runs:
+        
+        mems = store.get_memories()
+        for mem in mems:
             last_accessed = None
-            if run.get("last_accessed_at"):
-                last_accessed = datetime.fromisoformat(run["last_accessed_at"])
-
-            old_tier = run.get("tier", "HOT")
-            new_tier = compute_tier(last_accessed, run.get("access_count", 0))
-
+            if mem.get("last_accessed"):
+                last_accessed = datetime.fromisoformat(mem["last_accessed"])
+                
+            old_imp = mem.get("importance", 1.0)
+            old_tier = _importance_to_tier(old_imp)
+            
+            new_tier = compute_tier(last_accessed, mem.get("reinforcement_count", 0))
+            new_imp = _tier_to_importance(new_tier)
+            
             if old_tier != new_tier:
                 store._conn.execute(
-                    "UPDATE runs SET tier = ? WHERE id = ?",
-                    (new_tier, run["id"])
+                    "UPDATE memories SET importance = ? WHERE id = ?",
+                    (new_imp, mem["id"])
                 )
                 moved[new_tier] += 1
-
-        # Retier notes
-        notes = store.get_all_notes()
-        for note in notes:
-            last_accessed = None
-            if note.get("last_accessed_at"):
-                last_accessed = datetime.fromisoformat(note["last_accessed_at"])
-
-            old_tier = note.get("tier", "HOT")
-            new_tier = compute_tier(last_accessed, note.get("access_count", 0))
-
-            if old_tier != new_tier:
-                store._conn.execute(
-                    "UPDATE notes SET tier = ? WHERE id = ?",
-                    (new_tier, note["id"])
-                )
-                moved[new_tier] += 1
-
+                
         store._conn.commit()
         return moved
-
     except Exception as e:
         print(f"[memory] error retiering: {e}", file=sys.stderr)
         return {"HOT": 0, "WARM": 0, "COLD": 0}

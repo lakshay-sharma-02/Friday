@@ -7,10 +7,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from memory import MemoryStore
+from memory import MemoryStore, initialize_memory_subsystem
 from core.intent import Intent
 from core.run import PipelineRun
 from core.pipeline import run_pipeline
+
+# Initialize memory subsystem to load models
+initialize_memory_subsystem()
 
 
 async def test_real_pipeline_with_memory():
@@ -19,11 +22,14 @@ async def test_real_pipeline_with_memory():
     print("Integration Test: Real Pipeline with Memory")
     print("=" * 60)
 
-    # Clean slate
-    if os.path.exists(".friday_memory.db"):
-        os.remove(".friday_memory.db")
-
     store = MemoryStore()
+    try:
+        store._conn.execute("DELETE FROM memories")
+        store._conn.execute("DELETE FROM embedding_index")
+        store._conn.execute("DELETE FROM history")
+        store._conn.commit()
+    except Exception as e:
+        print(f"Error clearing db: {e}")
 
     print("\n=== Part 1: Run first task (git status) ===")
     intent1 = Intent(kind="task", payload={"text": "check git status"})

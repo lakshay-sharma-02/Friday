@@ -60,7 +60,8 @@ class OperationClassifier:
             "reflect", "what went wrong", "lessons", "retrospect"
         ],
         Operation.EXECUTE: [
-            "run", "execute", "do", "perform", "start", "launch"
+            "run", "execute", "do", "perform", "start", "launch",
+            "deploy", "refactor", "build", "migrate", "provision"
         ],
         Operation.MODIFY: [
             "create", "modify", "edit", "update", "change", "write",
@@ -91,6 +92,7 @@ class OperationClassifier:
         # "Show me the command" / "show command" / "show the install" = ADVISE, not just READ
         if any(phrase in query_lower for phrase in [
             "show me the command", "show the command", "show command",
+            "show install command", "show the install command",
             "show the install", "show me how to", "show how to",
             "what command", "which command", "what's the command"
         ]):
@@ -100,9 +102,20 @@ class OperationClassifier:
         if "where is" in query_lower or "where's" in query_lower:
             return Operation.LOOKUP
 
+        # "Review"/"audit" a repo/project/code = REVIEW (synthesis), not a bare READ.
+        if query_lower.startswith("review") or query_lower.startswith("audit"):
+            return Operation.REVIEW
+        if any(p in query_lower for p in [
+            "review this", "review the", "review our", "review that",
+            "audit this", "audit the", "review repository", "review codebase",
+            "review project", "review repo",
+        ]):
+            return Operation.REVIEW
+
         # "How should I" / "What command" / "Best way" = ADVISE, not EXECUTE
         if any(phrase in query_lower for phrase in [
-            "how should", "best way to", "what's the best"
+            "how should", "best way to", "what's the best", "explain how to",
+            "explain how", "how do i", "how would you"
         ]):
             return Operation.ADVISE
 

@@ -194,7 +194,7 @@ async def create_plan(
         import core.model_client as client_module
         client_module.SYSTEM_PROMPT = system_prompt
 
-        response = await call_model(prompt)
+        response = await call_model(prompt, stream_to_stdout=False)
 
         # Restore original system prompt
         client_module.SYSTEM_PROMPT = original_prompt
@@ -202,12 +202,9 @@ async def create_plan(
         # Parse JSON response
         response = response.strip()
 
-        # Check for LESSON line at the end
-        lesson = None
-        lines = response.split("\n")
-        if lines and lines[-1].startswith("LESSON:"):
-            lesson = lines[-1][7:].strip()  # Extract lesson text
-            response = "\n".join(lines[:-1]).strip()  # Remove LESSON line from plan
+        # Check for LESSON line at the end using MemoryManager
+        from memory.manager import MemoryManager
+        response, lesson = MemoryManager().extract_lesson(response)
 
         # Remove markdown code fences if present
         if response.startswith("```"):

@@ -6,6 +6,7 @@ The LLM receives evidence, not guesses.
 from dataclasses import dataclass, field
 from typing import Any, Optional
 from enum import Enum
+from pathlib import Path
 
 
 class EvidenceSource(Enum):
@@ -85,6 +86,46 @@ class EvidenceBundle:
     def is_empty(self) -> bool:
         """Check if bundle has no evidence."""
         return len(self.items) == 0
+
+
+def build_synthesis_prompt(bundle: EvidenceBundle, query: str) -> str:
+    """Build a synthesis prompt that forces the LLM to stay grounded in evidence.
+
+    The prompt (1) declares retrieved evidence authoritative, (2) forbids
+    introducing facts not present in it, and (3) requires the model to say so
+    when evidence is insufficient. This is the single source of truth for the
+    "evidence precedence" rule (Part 4/5/9) across all synthesis queries.
+    """
+    evidence_section = bundle.to_prompt_section()
+
+    parts = [
+        "You are synthesizing an answer from RETRIEVED EVIDENCE only.",
+        "",
+        "RULES:",
+        "1. Retrieved evidence is AUTHORITATIVE. Never contradict it.",
+        "2. General knowledge is LOWER priority. If evidence conflicts with your "
+        "model priors, TRUST THE EVIDENCE.",
+        "3. Do NOT introduce any fact, memory trace, install record, file state, "
+        "or system state that is not present in the EVIDENCE block below. "
+        "Never fabricate paths, branches, versions, or past events.",
+        "4. If the EVIDENCE does not contain what is needed to answer, state that "
+        "plainly (e.g. 'The available evidence does not cover X.') instead of "
+        "guessing or filling in from memory.",
+        "",
+    ]
+
+    if evidence_section:
+        parts.append(evidence_section)
+        parts.append("")
+    else:
+        parts.append("No evidence was collected.")
+        parts.append("")
+
+    parts.append(f"User request: {query}")
+    parts.append("")
+    parts.append("Answer strictly from the EVIDENCE above, following RULES 1-4.")
+
+    return "\n".join(parts)
 
 
 def collect_memory_evidence(memory_manager, query: str) -> EvidenceBundle:
@@ -180,5 +221,47 @@ def collect_system_evidence(world_state: "WorldState") -> EvidenceBundle:
         bundle.add(EvidenceSource.OBSERVERS, "os", comp.os)
 
     bundle.add(EvidenceSource.OBSERVERS, "internet", net.internet_reachable)
+
+    return bundle
+
+
+_DOC_CANDIDATES = [
+    ("README.md", "readme"),
+    ("README.txt", "readme"),
+    ("README", "readme"),
+    ("CLAUDE.md", "claude_md"),
+    ("ARCHITECTURE.md", "architecture"),
+    ("SYSTEM_ARCHITECTURE.md", "architecture"),
+    ("PHASE10_ARCHITECTURE_DIAGRAM.md", "architecture"),
+]
+
+
+def collect_document_evidence(cwd: str = ".") -> EvidenceBundle:
+    """Collect evidence from project documents (README, architecture, CLAUDE.md).
+
+    Reads real files from disk - authoritative project-level context.
+    """
+    bundle = EvidenceBundle()
+    base = Path(cwd).resolve()
+
+    if not base.exists():
+        return bundle
+
+    for filename, key in _DOC_CANDIDATES:
+        path = base / filename
+        if path.exists():
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            # Cap content so we don't flood the prompt.
+            excerpt = text[:2000]
+            bundle.add(
+                EvidenceSource.WORKSPACE,
+                key,
+                excerpt,
+                confidence=1.0,
+                path=str(path),
+            )
 
     return bundle

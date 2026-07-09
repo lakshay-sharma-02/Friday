@@ -80,7 +80,7 @@ async def test_complete_e2e():
         test_run_id = runs[0]['id']
         old_date = (datetime.now(timezone.utc) - timedelta(days=20)).isoformat()
         store._conn.execute(
-            "UPDATE runs SET last_accessed_at = ?, access_count = 0 WHERE id = ?",
+            "UPDATE memories SET last_accessed = ?, reinforcement_count = 0 WHERE id = ?",
             (old_date, test_run_id)
         )
         store._conn.commit()

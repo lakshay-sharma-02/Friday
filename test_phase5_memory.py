@@ -10,9 +10,13 @@ from pathlib import Path
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from memory import MemoryStore, retier_all
+from memory import MemoryStore, retier_all, initialize_memory_subsystem, get_worker
+from memory.embeddings import EmbeddingIndex
 from core.intent import Intent
 from core.run import PipelineRun
+
+# Initialize memory subsystem to load models
+initialize_memory_subsystem()
 
 
 async def test_1_run_two_tasks():
@@ -20,19 +24,25 @@ async def test_1_run_two_tasks():
     print("\n=== TEST 1: Run two different tasks ===")
 
     # Clean slate
-    if os.path.exists(".friday_memory.db"):
-        os.remove(".friday_memory.db")
-
     store = MemoryStore()
+    try:
+        store._conn.execute("DELETE FROM memories")
+        store._conn.execute("DELETE FROM embedding_index")
+        store._conn.execute("DELETE FROM history")
+        store._conn.commit()
+    except Exception as e:
+        print(f"Error clearing db: {e}")
 
     # Create and store two runs
     intent1 = Intent(kind="task", payload={"text": "check git status"})
     run1 = PipelineRun(intent=intent1, status="completed")
-    store.put_run(run1)
+    id1 = store.put_run(run1)
+    get_worker().enqueue(id1)
 
     intent2 = Intent(kind="task", payload={"text": "list files in current directory"})
     run2 = PipelineRun(intent=intent2, status="completed")
-    store.put_run(run2)
+    id2 = store.put_run(run2)
+    get_worker().enqueue(id2)
 
     # Check stats
     stats = store.stats()
@@ -52,7 +62,8 @@ async def test_2_semantic_similarity():
     # Add a third task semantically similar to "check git status"
     intent3 = Intent(kind="task", payload={"text": "show me the git repository status"})
     run3 = PipelineRun(intent=intent3, status="completed")
-    store.put_run(run3)
+    id3 = store.put_run(run3)
+    get_worker().enqueue(id3)
 
     # Search for something related to git status
     query = "git status"
@@ -109,31 +120,38 @@ async def test_4_tier_aging():
     intent = Intent(kind="task", payload={"text": "old task for tier testing"})
     run = PipelineRun(intent=intent, status="completed")
     run_id = store.put_run(run)
+    get_worker().enqueue(run_id)
 
     # Manually set last_accessed_at to 20 days ago
     old_date = (datetime.now(timezone.utc) - timedelta(days=20)).isoformat()
     store._conn.execute(
-        "UPDATE runs SET last_accessed_at = ?, access_count = 0 WHERE id = ?",
+        "UPDATE memories SET last_accessed = ?, reinforcement_count = 0 WHERE id = ?",
         (old_date, run_id)
     )
     store._conn.commit()
 
     # Check tier before retiering
-    cursor = store._conn.execute("SELECT tier FROM runs WHERE id = ?", (run_id,))
-    tier_before = cursor.fetchone()["tier"]
-    print(f"\nTier before retier: {tier_before}")
+    cursor = store._conn.execute("SELECT importance FROM memories WHERE id = ?", (run_id,))
+    row = cursor.fetchone()
+    assert row is not None
+    old_imp = row["importance"]
+    old_tier = "HOT" if old_imp > 0.8 else "WARM" if old_imp > 0.3 else "COLD"
+    print(f"Before retier: {old_tier}")
 
-    # Retier
+    # Retier all
+    from memory import retier_all
     moved = retier_all(store)
-    print(f"Retier results: {moved}")
 
     # Check tier after retiering
-    cursor = store._conn.execute("SELECT tier FROM runs WHERE id = ?", (run_id,))
-    tier_after = cursor.fetchone()["tier"]
-    print(f"Tier after retier: {tier_after}")
+    cursor = store._conn.execute("SELECT importance FROM memories WHERE id = ?", (run_id,))
+    row = cursor.fetchone()
+    new_imp = row["importance"]
+    new_tier = "HOT" if new_imp > 0.8 else "WARM" if new_imp > 0.3 else "COLD"
+    print(f"After retier: {new_tier}")
+    print(f"Moved counts: {moved}")
 
-    assert tier_after == "COLD", f"Expected COLD tier, got {tier_after}"
-    print("✓ Test 4 passed: Old run correctly moved to COLD tier")
+    assert new_tier == "COLD", f"Expected COLD, got {new_tier}"
+    assert moved.get("COLD", 0) >= 1, "Expected at least 1 item moved to COLD"
 
 
 async def test_5_explicit_teaching():
@@ -146,6 +164,7 @@ async def test_5_explicit_teaching():
     # Simulate teach: command
     teach_text = "always run tests before committing"
     note_id = store.add_note(content=teach_text, source="taught", source_run_id=None)
+    get_worker().enqueue(note_id)
 
     stats_after = store.stats()
 
@@ -205,9 +224,11 @@ async def test_7_lesson_extraction():
     intent = Intent(kind="task", payload={"text": "run shell command with relative path"})
     run = PipelineRun(intent=intent, status="completed")
     run_id = store.put_run(run)
+    get_worker().enqueue(run_id)
 
     # Add lesson note
     note_id = store.add_note(content=lesson_text, source="lesson", source_run_id=run_id)
+    get_worker().enqueue(note_id)
 
     stats_after = store.stats()
 
